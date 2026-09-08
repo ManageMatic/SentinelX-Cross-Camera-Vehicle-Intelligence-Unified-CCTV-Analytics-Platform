@@ -62,5 +62,50 @@ This document tracks module-by-module implementation status, acceptance criteria
 ---
 
 ## Module 2 — Database and Data Model
-- **Status**: NOT STARTED
+
+- **Status**: COMPLETE
+- **Implemented**:
+  - DeclarativeBase and standard mixins (`UUIDPrimaryKeyMixin`, `TimestampMixin`) in `backend/app/models/base.py`.
+  - Implemented complete database models in SQLAlchemy 2.0 with async `selectin` relationships:
+    - **Users & RBAC**: `User`, `Role`, `Permission`, `RoleType`
+    - **Camera Registry**: `Camera`, `CameraSource`, `CameraHealth`
+    - **Vehicle Intelligence**: `VehicleDetection`, `VehicleTrack`, `VehicleEvent`, `VehiclePlate`, `VehicleEmbedding`
+    - **Watchlist Engine**: `Watchlist`, `WatchlistEntry`, `WatchlistCategory`, `WatchlistPriority`
+    - **Alerts Engine**: `Alert`, `AlertEvent`, `AlertStatus`
+    - **Forensic Evidence**: `Evidence` (with SHA-256 integrity hash tracking)
+    - **Audit Trail**: `AuditLog` (append-only forensic tracking)
+    - **System Telemetry**: `SystemHealthMetric`
+  - Created async engine, session factory (`AsyncSessionLocal`), FastAPI session dependency `get_db()`, and auto-table initialization `init_db()` in `backend/app/db/session.py`.
+  - Created dev & demo seeder `database/seed/dev_seed.py` for populating initial roles, demo cameras, watchlists, and vehicle events.
+  - Added unit test suite `backend/tests/unit/test_database.py` covering model creation, relationships, foreign keys, and normalized plate search.
+- **Files Changed**:
+  - `backend/app/models/base.py`
+  - `backend/app/models/user.py`
+  - `backend/app/models/camera.py`
+  - `backend/app/models/vehicle.py`
+  - `backend/app/models/watchlist.py`
+  - `backend/app/models/alert.py`
+  - `backend/app/models/evidence.py`
+  - `backend/app/models/audit.py`
+  - `backend/app/models/system.py`
+  - `backend/app/models/__init__.py`
+  - `backend/app/db/session.py`
+  - `backend/app/db/__init__.py`
+  - `backend/app/main.py`
+  - `database/seed/dev_seed.py`
+  - `backend/tests/unit/test_database.py`
+  - `docs/IMPLEMENTATION_PROGRESS.md`
+- **Tests**:
+  - `pytest backend/tests/unit/test_database.py` (5 comprehensive async DB tests)
+  - Full suite: `pytest backend/tests` (17 passed in 1.05s)
+  - Lint check: `ruff check backend database` (0 errors)
+  - Frontend checks: `npm run test` & `npm run build` (PASS)
+- **Test Result**: PASS
+- **Known Issues**: None.
 - **Next Module**: Module 3 — Backend API Foundation
+
+---
+
+## Module 3 — Backend API Foundation
+- **Status**: NOT STARTED
+- **Next Module**: Module 4 — Frontend Foundation and Dashboard Shell

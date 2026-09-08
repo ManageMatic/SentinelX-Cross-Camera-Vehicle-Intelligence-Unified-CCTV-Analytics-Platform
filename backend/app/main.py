@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 from app.api.v1.api import api_router
 from app.core.config import settings
 from app.core.logging import logger
+from app.db.session import close_db, init_db
 
 
 @asynccontextmanager
@@ -18,8 +19,15 @@ async def lifespan(app: FastAPI):
     logger.info("Initializing SentinelX Backend v%s...", settings.VERSION)
     logger.info("Environment: %s | Debug: %s", settings.ENVIRONMENT, settings.DEBUG)
     logger.info("Configuration (Safe): %s", settings.get_safe_dict())
+
+    # Initialize database tables
+    await init_db()
+
     yield
-    logger.info("Shutting down SentinelX Backend...")
+
+    # Teardown
+    await close_db()
+    logger.info("SentinelX Backend shutdown complete.")
 
 
 app = FastAPI(
