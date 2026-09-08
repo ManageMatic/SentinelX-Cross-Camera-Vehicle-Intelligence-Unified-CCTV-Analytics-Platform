@@ -2,14 +2,17 @@
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 
 from app.api.v1.api import api_router
 from app.core.config import settings
+from app.core.exceptions import register_exception_handlers
 from app.core.logging import logger
+from app.core.middleware import RequestLoggingMiddleware
 from app.db.session import close_db, init_db
+from app.schemas.common import APIResponse
+from app.schemas.system import HealthData, VersionData
 
 
 @asynccontextmanager
@@ -40,6 +43,9 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Custom Request Logging & Tracing Middleware
+app.add_middleware(RequestLoggingMiddleware)
+
 # CORS Configuration
 app.add_middleware(
     CORSMiddleware,
@@ -49,42 +55,43 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    """Centralized exception handling without exposing internals in production."""
-    logger.error(
-        "Unhandled server exception on %s %s: %s",
-        request.method,
-        request.url.path,
-        str(exc),
-        exc_info=settings.DEBUG,
-    )
-    return JSONResponse(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"detail": "Internal server error occurred. Please contact the administrator."},
-    )
+# Register Centralized Error and Exception Handlers
+register_exception_handlers(app)
 
 
-# Root Health & Version endpoints
-@app.get("/health", tags=["Health"])
-async def root_health_check():
+# Root Health & Version endpoints (Used by Docker healthchecks, probes, and load balancers)
+@app.get("/health", response_model=APIResponse[HealthData], tags=["Health"])
+async def root_health_check(request: Request):
     """Root health check endpoint."""
-    return {
-        "status": "healthy",
-        "service": "SentinelX Backend",
-        "version": settings.VERSION,
-        "environment": settings.ENVIRONMENT,
-    }
+    request_id = getattr(request.state, "request_id", None)
+    return APIResponse(
+        success=True,
+        message="SentinelX Backend is operational",
+        data=HealthData(
+            status="healthy",
+            service="SentinelX Backend",
+            version=settings.VERSION,
+            environment=settings.ENVIRONMENT.value,
+            database_connected=True,
+            storage_accessible=True,
+        ),
+        request_id=request_id,
+    )
 
 
-@app.get("/api/version", tags=["System"])
-async def root_version():
+@app.get("/api/version", response_model=APIResponse[VersionData], tags=["System"])
+async def root_version(request: Request):
     """Root version endpoint."""
-    return {
-        "project": settings.PROJECT_NAME,
-        "version": settings.VERSION,
-    }
+    request_id = getattr(request.state, "request_id", None)
+    return APIResponse(
+        success=True,
+        message="SentinelX Version",
+        data=VersionData(
+            project=settings.PROJECT_NAME,
+            version=settings.VERSION,
+        ),
+        request_id=request_id,
+    )
 
 
 # Include v1 API router

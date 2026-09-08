@@ -9,10 +9,12 @@ async def test_root_health_endpoint(async_client: AsyncClient):
     """Test root /health endpoint returns 200 and healthy status."""
     response = await async_client.get("/health")
     assert response.status_code == 200
-    data = response.json()
-    assert data["status"] == "healthy"
-    assert "version" in data
-    assert "service" in data
+    res_data = response.json()
+    assert res_data["success"] is True
+    assert "data" in res_data
+    assert res_data["data"]["status"] == "healthy"
+    assert "version" in res_data["data"]
+    assert "service" in res_data["data"]
 
 
 @pytest.mark.asyncio
@@ -20,8 +22,9 @@ async def test_api_v1_health_endpoint(async_client: AsyncClient):
     """Test /api/v1/health endpoint."""
     response = await async_client.get("/api/v1/health")
     assert response.status_code == 200
-    data = response.json()
-    assert data["status"] == "healthy"
+    res_data = response.json()
+    assert res_data["success"] is True
+    assert res_data["data"]["status"] == "healthy"
 
 
 @pytest.mark.asyncio
@@ -29,18 +32,24 @@ async def test_api_version_endpoint(async_client: AsyncClient):
     """Test /api/version and /api/v1/version endpoints."""
     response = await async_client.get("/api/version")
     assert response.status_code == 200
-    data = response.json()
-    assert "version" in data
-    assert "project" in data
+    res_data = response.json()
+    assert res_data["success"] is True
+    assert "version" in res_data["data"]
+    assert "project" in res_data["data"]
 
     response_v1 = await async_client.get("/api/v1/version")
     assert response_v1.status_code == 200
-    data_v1 = response_v1.json()
-    assert data_v1["api_version"] == "v1"
+    res_data_v1 = response_v1.json()
+    assert res_data_v1["success"] is True
+    assert res_data_v1["data"]["api_version"] == "v1"
 
 
 @pytest.mark.asyncio
 async def test_404_not_found(async_client: AsyncClient):
-    """Test non-existent route returns 404."""
+    """Test non-existent route returns 404 in standardized APIResponse envelope."""
     response = await async_client.get("/non-existent-path")
     assert response.status_code == 404
+    data = response.json()
+    assert data["success"] is False
+    assert "message" in data
+    assert "errors" in data
