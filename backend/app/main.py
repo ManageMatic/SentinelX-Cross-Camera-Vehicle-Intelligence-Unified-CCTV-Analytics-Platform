@@ -1,6 +1,5 @@
 """SentinelX FastAPI Backend Application Entrypoint."""
 
-import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, status
@@ -9,20 +8,16 @@ from fastapi.responses import JSONResponse
 
 from app.api.v1.api import api_router
 from app.core.config import settings
-
-# Setup structured logging
-logging.basicConfig(
-    level=settings.LOG_LEVEL,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-)
-logger = logging.getLogger("sentinelx")
+from app.core.logging import logger
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application startup and shutdown lifecycle management."""
+    settings.ensure_storage_directories()
     logger.info("Initializing SentinelX Backend v%s...", settings.VERSION)
     logger.info("Environment: %s | Debug: %s", settings.ENVIRONMENT, settings.DEBUG)
+    logger.info("Configuration (Safe): %s", settings.get_safe_dict())
     yield
     logger.info("Shutting down SentinelX Backend...")
 

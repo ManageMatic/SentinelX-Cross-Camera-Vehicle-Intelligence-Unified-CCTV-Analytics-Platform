@@ -25,8 +25,6 @@ This document tracks module-by-module implementation status, acceptance criteria
   - `docs/IMPLEMENTATION_PROGRESS.md`
   - `backend/` (all initial foundation files)
   - `frontend/` (all initial foundation files)
-  - `ai/` (subpackages and `__init__.py`)
-  - `ingestion/` (subpackages and `__init__.py`)
 - **Tests**:
   - Backend: `pytest backend/tests`
   - Frontend: `npm run test` / `npm run build`
@@ -38,5 +36,31 @@ This document tracks module-by-module implementation status, acceptance criteria
 ---
 
 ## Module 1 — Configuration and Environment Management
-- **Status**: NOT STARTED
+
+- **Status**: COMPLETE
+- **Implemented**:
+  - Centralized, type-safe configuration using Pydantic v2 `BaseSettings` in `backend/app/core/config.py`.
+  - Defined validated settings for database (PostgreSQL/PostGIS/pgvector), cache/queues (Valkey), Sentinel Sandbox endpoints (`/api/ingest`, RTSP, WHEP, HLS ports), AI vision thresholds, and security parameters.
+  - Added strict validators for ports, confidence thresholds, AI device types (`cpu`, `cuda`, `mps`), and CORS origins.
+  - Implemented startup directory verification `ensure_storage_directories()` to automatically guarantee evidence storage paths exist safely.
+  - Implemented `get_safe_dict()` and `__repr__()` masking for sensitive parameters (`JWT_SECRET`, database passwords, connection credentials) to ensure zero plaintext credential leaks.
+  - Created structured safe logging system `backend/app/core/logging.py` with `SafeLogFilter` to scrub tokens and credentials from logs.
+- **Files Changed**:
+  - `backend/app/core/config.py`
+  - `backend/app/core/logging.py`
+  - `backend/app/main.py`
+  - `backend/tests/unit/test_config.py`
+  - `docs/IMPLEMENTATION_PROGRESS.md`
+- **Tests**:
+  - `pytest backend/tests/unit/test_config.py` (8 new tests)
+  - Full suite: `pytest backend/tests` (12 passed)
+  - Lint check: `ruff check backend` (0 errors)
+- **Test Result**: PASS
+- **Known Issues**: None.
 - **Next Module**: Module 2 — Database and Data Model
+
+---
+
+## Module 2 — Database and Data Model
+- **Status**: NOT STARTED
+- **Next Module**: Module 3 — Backend API Foundation
