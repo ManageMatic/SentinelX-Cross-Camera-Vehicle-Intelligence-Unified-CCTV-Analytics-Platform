@@ -369,3 +369,41 @@ This document tracks module-by-module implementation status, acceptance criteria
 - **Known Issues**: None.
 - **Next Module**: Module 10 — Multi-Class Vehicle Detection Engine (YOLOX / ONNX)
 
+---
+
+## Module 10 — Multi-Class Vehicle Detection Engine (YOLOX / ONNX)
+
+- **Status**: COMPLETE
+- **Implemented**:
+  - Installed `onnxruntime` (v1.29.0) and `python-multipart` with zero paid or proprietary cloud dependencies (100% Apache-2.0 / MIT FOSS).
+  - Implemented `VehicleClass` taxonomy (`car`, `motorcycle`, `bus`, `truck`, `auto_rickshaw`, `van`), `BoundingBox`, `DetectedVehicle`, `FrameDetectionResult`, `DetectorConfig`, and `DetectorTelemetry` in `backend/app/schemas/detection.py`.
+  - Built `VehicleDetector` in `backend/app/services/vehicle_detector.py`:
+    - Multi-provider ONNX Runtime session initializer (supports CUDA, DirectML, OpenVINO, CPU).
+    - Aspect-ratio preserving `letterbox` image pre-processor with scale factor and padding computation.
+    - IoU Non-Maximum Suppression (NMS) bounding box deduplicator.
+    - Coordinate de-letterboxing with normalization (`[norm_x1, norm_y1, norm_x2, norm_y2]` in `[0.0, 1.0]`).
+    - Safe vehicle crop extractor (`extract_vehicle_crop`) for downstream ANPR (Module 12) and Re-ID embedding (Module 13) workers.
+    - Synthetic vehicle detector fallback mode for instant headless testing and zero-download CI/CD pipelines.
+    - Real-time performance telemetry tracking average latency (ms), inference FPS, and vehicle class distributions.
+  - Implemented RESTful Detection API routes in `backend/app/api/v1/detection.py`:
+    - `GET /api/v1/detection/telemetry`: Inference engine telemetry, active provider, FPS, and class breakdown.
+    - `GET /api/v1/detection/classes`: Complete vehicle classification taxonomy.
+    - `POST /api/v1/detection/configure`: Dynamic tuning of confidence thresholds, NMS IoU, input shape, and active classes.
+    - `POST /api/v1/detection/detect-frame`: High-performance multipart image upload endpoint returning localized bounding boxes and detections.
+  - Built comprehensive unit test suite in `backend/tests/unit/test_vehicle_detection.py` testing letterbox transforms, NMS suppression, crop extraction, detection outputs, and REST API routes.
+- **Files Changed**:
+  - `backend/requirements.txt`
+  - `backend/app/schemas/detection.py`
+  - `backend/app/schemas/__init__.py`
+  - `backend/app/services/vehicle_detector.py`
+  - `backend/app/api/v1/detection.py`
+  - `backend/app/api/v1/api.py`
+  - `backend/tests/unit/test_vehicle_detection.py`
+  - `docs/IMPLEMENTATION_PROGRESS.md`
+- **Tests**:
+  - Backend: `pytest backend/tests` (45/45 passed in 9.29s)
+  - Python Linter: `ruff check backend` (0 errors)
+  - Frontend: `npm run test` (4/4 passed in 6.52s)
+- **Test Result**: PASS
+- **Known Issues**: None.
+- **Next Module**: Module 11 — ByteTrack Multi-Object Tracking Engine

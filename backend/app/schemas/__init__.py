@@ -26,6 +26,14 @@ from app.schemas.common import (
     PaginationParams,
     utc_now_iso,
 )
+from app.schemas.detection import (
+    BoundingBox,
+    DetectedVehicle,
+    DetectorConfig,
+    DetectorTelemetry,
+    FrameDetectionResult,
+    VehicleClass,
+)
 from app.schemas.proxy import (
     CameraStreamEndpoints,
     StreamProxyInfo,
@@ -86,4 +94,10 @@ __all__ = [
     "BufferConfig",
     "CameraBufferStats",
     "BufferPoolStatus",
+    "VehicleClass",
+    "BoundingBox",
+    "DetectedVehicle",
+    "FrameDetectionResult",
+    "DetectorConfig",
+    "DetectorTelemetry",
 ]
