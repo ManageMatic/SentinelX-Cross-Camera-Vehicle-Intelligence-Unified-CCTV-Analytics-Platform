@@ -71,9 +71,17 @@ export const TopNav: React.FC<TopNavProps> = ({
   return (
     <header className="h-16 bg-[#090e1a] border-b border-slate-800 px-4 lg:px-6 flex items-center justify-between gap-4 z-40 sticky top-0 shadow-lg">
       {/* Brand & Gujarat Police Insignia */}
-      <div className="flex items-center gap-3.5 min-w-max">
-        <div className="relative flex items-center justify-center p-2 rounded-xl bg-gradient-to-br from-blue-600/30 to-blue-900/40 border border-blue-500/40 shadow-[0_0_15px_rgba(37,99,235,0.3)]">
-          <Shield className="h-6 w-6 text-blue-400" />
+      <div className="flex items-center gap-3 min-w-max">
+        <div className="relative flex items-center justify-center p-1 rounded-xl bg-gradient-to-br from-amber-500/20 via-blue-950/40 to-cyan-950/50 border border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.25)]">
+          <img
+            src="/logo.png"
+            alt="NETRA-X Emblem"
+            className="h-8 w-8 object-contain drop-shadow-[0_0_8px_rgba(56,189,248,0.6)]"
+            onError={(e) => {
+              // Fallback to favicon SVG if image load fails
+              e.currentTarget.src = '/favicon.svg';
+            }}
+          />
           <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
@@ -81,17 +89,17 @@ export const TopNav: React.FC<TopNavProps> = ({
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-lg font-black tracking-wider text-white font-mono bg-gradient-to-r from-white via-slate-100 to-blue-300 bg-clip-text text-transparent">
-              SENTINEL<span className="text-blue-500">X</span>
+            <span className="text-lg font-black tracking-wider text-white font-mono bg-gradient-to-r from-amber-200 via-slate-100 to-cyan-300 bg-clip-text text-transparent">
+              NETRA<span className="text-cyan-400">-X</span>
             </span>
-            <span className="hidden sm:inline-block px-1.5 py-0.5 rounded bg-blue-950/80 border border-blue-800 text-[10px] font-bold font-mono text-blue-300 tracking-wider">
+            <span className="hidden sm:inline-block px-1.5 py-0.5 rounded bg-amber-950/80 border border-amber-600/60 text-[10px] font-bold font-mono text-amber-300 tracking-wider">
               GPIC-2026
             </span>
           </div>
           <p className="text-[10px] text-slate-400 font-medium tracking-wide flex items-center gap-1.5">
             <span>GUJARAT POLICE SURVEILLANCE COMMAND</span>
             <span className="hidden md:inline text-slate-600">•</span>
-            <span className="hidden md:inline text-emerald-400 font-mono">₹0 OPEN STACK</span>
+            <span className="hidden md:inline text-cyan-400 font-mono">₹0 OPEN STACK</span>
           </p>
         </div>
       </div>

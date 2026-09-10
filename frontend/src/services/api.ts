@@ -40,7 +40,7 @@ export async function fetchSystemHealth(): Promise<SystemHealthResponse> {
   } catch {
     return {
       status: 'healthy',
-      service: 'SentinelX Core Backend (Local Dev)',
+      service: 'NETRA-X Core Backend (Local Dev)',
       version: '1.0.0',
       environment: 'development',
     };

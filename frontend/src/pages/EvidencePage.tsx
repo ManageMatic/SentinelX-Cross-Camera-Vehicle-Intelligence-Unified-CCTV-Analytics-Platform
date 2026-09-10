@@ -150,7 +150,7 @@ and unmodified since capture in accordance with courtroom admissibility standard
   const handleExportFullPackage = () => {
     const jsonSummary = JSON.stringify(
       {
-        platform: 'SentinelX Forensic Vault',
+        platform: 'NETRA-X Forensic Vault',
         export_date: new Date().toISOString(),
         total_records: evidenceList.length,
         standards: ['Section 65B Indian Evidence Act', 'SHA-256 FIPS 180-4', 'ISO/IEC 27037'],
@@ -165,7 +165,7 @@ and unmodified since capture in accordance with courtroom admissibility standard
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `SentinelX_Evidence_Vault_Package_${Date.now()}.json`;
+      a.download = `NETRA-X_Evidence_Vault_Package_${Date.now()}.json`;
       a.click();
       window.URL.revokeObjectURL(url);
     }

@@ -97,7 +97,7 @@ export const SystemPage: React.FC<SystemPageProps> = ({ health }) => {
             </div>
 
             <div className="p-4 rounded-xl bg-[#080d19] border border-emerald-900/40 space-y-1.5">
-              <span className="text-emerald-400 font-bold block text-sm">SentinelX Edge Metadata Model</span>
+              <span className="text-emerald-400 font-bold block text-sm">NETRA-X Edge Metadata Model</span>
               <p className="text-2xl font-black text-emerald-400">32.0 Mbps</p>
               <p className="text-[10px] text-slate-400">10.54 TB / Month (1 KB/event)</p>
               <p className="text-[10px] text-emerald-400 font-bold">Est. Network: ~₹96 Lakhs/year</p>

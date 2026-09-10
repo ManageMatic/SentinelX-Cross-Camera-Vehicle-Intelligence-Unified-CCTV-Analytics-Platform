@@ -2,7 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import App from '../App';
 
-describe('SentinelX Tactical Command Center Shell (Module 4)', () => {
+describe('NETRA-X Tactical Command Center Shell (Module 4)', () => {
   beforeEach(() => {
     vi.stubGlobal(
       'fetch',
@@ -13,7 +13,7 @@ describe('SentinelX Tactical Command Center Shell (Module 4)', () => {
           message: 'OK',
           data: {
             status: 'healthy',
-            service: 'SentinelX Core Backend',
+            service: 'NETRA-X Core Backend',
             version: '1.0.0',
             environment: 'test',
           },
@@ -22,9 +22,9 @@ describe('SentinelX Tactical Command Center Shell (Module 4)', () => {
     );
   });
 
-  it('renders top navigation with SentinelX insignia and GPIC badge', () => {
+  it('renders top navigation with NETRA-X insignia and GPIC badge', () => {
     render(<App />);
-    expect(screen.getAllByText(/SENTINEL/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/NETRA/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/GPIC-2026/i)).toBeInTheDocument();
     expect(screen.getByText(/GUJARAT POLICE SURVEILLANCE COMMAND/i)).toBeInTheDocument();
   });

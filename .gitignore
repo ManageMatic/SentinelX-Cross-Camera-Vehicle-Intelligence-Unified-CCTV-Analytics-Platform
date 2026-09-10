@@ -45,6 +45,9 @@ frontend/build/
 .env.*.local
 
 # Evidence & Local Data
+*.db
+*.sqlite
+*.sqlite3
 data/evidence/*
 !data/evidence/.gitkeep
 data/raw/*

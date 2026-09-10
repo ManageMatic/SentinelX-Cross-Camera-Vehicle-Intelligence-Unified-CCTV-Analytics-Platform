@@ -143,7 +143,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="p-3 border-t border-slate-800/80 bg-[#060911] flex items-center justify-between">
         {!collapsed && (
           <div className="text-[10px] font-mono text-slate-400">
-            <span>SentinelX Core v1.0</span>
+            <span>NETRA-X Core v1.0</span>
           </div>
         )}
         <button

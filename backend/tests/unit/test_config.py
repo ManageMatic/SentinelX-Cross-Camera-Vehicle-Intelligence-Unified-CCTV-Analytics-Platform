@@ -12,7 +12,7 @@ from pydantic import ValidationError
 def test_default_settings_valid():
     """Verify default settings instantiate with expected valid values."""
     s = Settings()
-    assert s.PROJECT_NAME.startswith("SentinelX")
+    assert s.PROJECT_NAME.startswith("NETRA-X")
     assert s.VERSION == "0.1.0"
     assert s.ENVIRONMENT in list(EnvironmentType)
     assert s.LOG_LEVEL in list(LogLevelType)

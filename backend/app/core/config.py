@@ -29,7 +29,7 @@ class LogLevelType(str, Enum):
 
 class Settings(BaseSettings):
     # Application Metadata
-    PROJECT_NAME: str = "SentinelX — Cross-Camera Vehicle Intelligence & Unified CCTV Analytics"
+    PROJECT_NAME: str = "NETRA-X — Unified Vehicle Tracking & Command Intelligence Platform"
     VERSION: str = "0.1.0"
     ENVIRONMENT: EnvironmentType = EnvironmentType.DEVELOPMENT
     DEBUG: bool = True

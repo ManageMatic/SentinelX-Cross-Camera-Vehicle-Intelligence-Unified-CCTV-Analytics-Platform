@@ -119,7 +119,7 @@ export const AuditPage: React.FC<AuditPageProps> = ({ logs = [] }) => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `SentinelX_Compliance_Audit_${Date.now()}.csv`;
+      a.download = `NETRA-X_Compliance_Audit_${Date.now()}.csv`;
       a.click();
       window.URL.revokeObjectURL(url);
     }

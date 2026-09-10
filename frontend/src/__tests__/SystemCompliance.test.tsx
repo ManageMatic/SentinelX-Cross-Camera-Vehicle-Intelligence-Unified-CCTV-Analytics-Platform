@@ -59,7 +59,7 @@ const mockAuditLogs: AuditRecord[] = [
 
 const mockHealth: SystemHealthResponse = {
   status: 'healthy',
-  service: 'SentinelX Core Backend',
+  service: 'NETRA-X Core Backend',
   version: '1.0.0',
   environment: 'production-evaluation',
 };

@@ -278,7 +278,7 @@ export const SearchPage: React.FC<SearchPageProps> = ({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `SentinelX_ANPR_Search_${Date.now()}.csv`;
+      a.download = `NETRA-X_ANPR_Search_${Date.now()}.csv`;
       a.click();
       window.URL.revokeObjectURL(url);
     }

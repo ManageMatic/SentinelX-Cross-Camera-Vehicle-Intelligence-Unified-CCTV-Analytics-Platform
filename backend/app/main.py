@@ -19,7 +19,7 @@ from app.schemas.system import HealthData, VersionData
 async def lifespan(app: FastAPI):
     """Application startup and shutdown lifecycle management."""
     settings.ensure_storage_directories()
-    logger.info("Initializing SentinelX Backend v%s...", settings.VERSION)
+    logger.info("Initializing NETRA-X Backend v%s...", settings.VERSION)
     logger.info("Environment: %s | Debug: %s", settings.ENVIRONMENT, settings.DEBUG)
     logger.info("Configuration (Safe): %s", settings.get_safe_dict())
 
@@ -30,13 +30,13 @@ async def lifespan(app: FastAPI):
 
     # Teardown
     await close_db()
-    logger.info("SentinelX Backend shutdown complete.")
+    logger.info("NETRA-X Backend shutdown complete.")
 
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="Cross-Camera Vehicle Intelligence & Unified CCTV Analytics Platform",
+    description="Unified Vehicle Tracking & Command Intelligence Platform",
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
@@ -66,10 +66,10 @@ async def root_health_check(request: Request):
     request_id = getattr(request.state, "request_id", None)
     return APIResponse(
         success=True,
-        message="SentinelX Backend is operational",
+        message="NETRA-X Backend is operational",
         data=HealthData(
             status="healthy",
-            service="SentinelX Backend",
+            service="NETRA-X Backend",
             version=settings.VERSION,
             environment=settings.ENVIRONMENT.value,
             database_connected=True,
