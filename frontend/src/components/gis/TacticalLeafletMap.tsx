@@ -49,10 +49,11 @@ export const TacticalLeafletMap: React.FC<TacticalLeafletMapProps> = ({
           attributionControl: false,
         });
 
-        // Add Dark Matter CartoDB Basemap (Free OpenStreetMap derivative)
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        // Add 100% Free OpenStreetMap Basemap (No API Key Required, No Watermarks)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           maxZoom: 19,
-          subdomains: 'abcd',
+          subdomains: ['a', 'b', 'c'],
+          className: 'tactical-dark-tiles',
         }).addTo(map);
 
         // Custom Zoom Control at Top-Right

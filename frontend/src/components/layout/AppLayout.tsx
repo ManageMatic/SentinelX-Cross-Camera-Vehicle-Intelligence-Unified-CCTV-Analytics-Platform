@@ -33,7 +33,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   children,
 }) => {
   return (
-    <div className="min-h-screen flex flex-col bg-[#070a12] text-slate-100 antialiased font-sans">
+    <div className="h-screen w-screen flex flex-col bg-[#070a12] text-slate-100 antialiased font-sans overflow-hidden">
       {/* Top Tactical Navigation */}
       <TopNav
         health={health}
@@ -48,17 +48,19 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
       {/* Real-time Emergency Hit Ticker */}
       <AlertTicker alerts={activeAlerts} onSelectAlert={onSelectAlert} />
 
-      {/* Main Workspace Frame */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar Navigation */}
-        <Sidebar
-          activeTab={activeTab}
-          onTabChange={onTabChange}
-          activeAlertCount={activeAlerts.length}
-        />
+      {/* Main Workspace Frame (Fixed Sidebar + Scrollable Content) */}
+      <div className="flex-1 flex overflow-hidden min-h-0">
+        {/* Fixed Left Sidebar Navigation */}
+        <div className="flex-shrink-0 h-full overflow-hidden">
+          <Sidebar
+            activeTab={activeTab}
+            onTabChange={onTabChange}
+            activeAlertCount={activeAlerts.length}
+          />
+        </div>
 
         {/* Content View Area */}
-        <main className="flex-1 overflow-y-auto bg-[#070a12] bg-tactical-grid flex flex-col">
+        <main className="flex-1 h-full overflow-y-auto bg-[#070a12] bg-tactical-grid flex flex-col min-h-0">
           <div className="px-4 sm:px-6 lg:px-8 py-3 border-b border-slate-800/80 bg-[#080d19]/80 backdrop-blur-sm sticky top-0 z-20">
             <Breadcrumbs activeTab={activeTab} onTabChange={onTabChange} subTitle={subTitle} />
           </div>

@@ -53,6 +53,11 @@ body {
   background-size: 24px 24px;
 }
 
+/* Tactical Dark Map Tiles (OpenStreetMap No-Watermark Filter) */
+.tactical-dark-tiles {
+  filter: brightness(0.55) invert(1) contrast(2.8) hue-rotate(205deg) saturate(0.3) brightness(0.75);
+}
+
 /* Glassmorphism Tactical Panels */
 .glass-panel {
   background: rgba(16, 23, 40, 0.75);

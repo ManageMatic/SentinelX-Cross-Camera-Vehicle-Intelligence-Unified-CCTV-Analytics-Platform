@@ -18,6 +18,7 @@ import {
   Wifi,
   WifiOff,
   Settings,
+  ExternalLink,
 } from 'lucide-react';
 import { Camera as CameraType } from '../../types';
 
@@ -73,6 +74,15 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
     }
 
     let hls: Hls | null = null;
+    let timeoutTimer: NodeJS.Timeout | null = null;
+
+    // Set 2.5s connection timeout for HLS stream - auto-switch to AI Canvas if session/CORS blocked
+    timeoutTimer = setTimeout(() => {
+      if (!isPlayingLive && streamMode === 'hls') {
+        setStreamMode('ai_canvas');
+        setStreamError('Cloud session needed - switched to AI Live Simulation');
+      }
+    }, 3000);
 
     if (Hls.isSupported()) {
       hls = new Hls({
@@ -89,6 +99,7 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
       hls.attachMedia(video);
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        if (timeoutTimer) clearTimeout(timeoutTimer);
         setIsPlayingLive(true);
         setStreamError(null);
         video.play().catch(() => {
@@ -100,7 +111,7 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
         if (data.fatal) {
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
-              setStreamError('Connecting to cctv.corp8.cloud (Session required)');
+              setStreamError('Connecting to cctv.corp8.cloud');
               hls?.startLoad();
               break;
             case Hls.ErrorTypes.MEDIA_ERROR:
@@ -108,7 +119,7 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
               hls?.recoverMediaError();
               break;
             default:
-              setStreamError('HLS stream requires authenticated session at cctv.corp8.cloud');
+              setStreamMode('ai_canvas');
               break;
           }
         }
@@ -117,16 +128,18 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
       // Native Apple HLS support
       video.src = hlsStreamUrl;
       video.addEventListener('loadedmetadata', () => {
+        if (timeoutTimer) clearTimeout(timeoutTimer);
         setIsPlayingLive(true);
         setStreamError(null);
         video.play().catch(() => {});
       });
       video.addEventListener('error', () => {
-        setStreamError('Direct HLS feed unreachable (Session required)');
+        setStreamMode('ai_canvas');
       });
     }
 
     return () => {
+      if (timeoutTimer) clearTimeout(timeoutTimer);
       if (hls) {
         hls.destroy();
         hlsInstanceRef.current = null;
@@ -306,27 +319,36 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
         {/* Stream Source Selector */}
         <div className="flex items-center gap-1 font-mono text-[10px]">
           <button
-            onClick={() => setStreamMode('hls')}
-            className={`px-2 py-0.5 rounded transition-colors ${
-              streamMode === 'hls'
-                ? 'bg-blue-600 text-white font-bold'
-                : 'bg-[#070b14] text-slate-400 hover:text-white border border-slate-800'
-            }`}
-            title="Live HLS Stream (cctv.corp8.cloud)"
-          >
-            HLS
-          </button>
-          <button
             onClick={() => setStreamMode('ai_canvas')}
             className={`px-2 py-0.5 rounded transition-colors ${
               streamMode === 'ai_canvas'
                 ? 'bg-emerald-600 text-white font-bold'
                 : 'bg-[#070b14] text-slate-400 hover:text-white border border-slate-800'
             }`}
-            title="AI Bounding Box Overlay"
+            title="AI Live Simulation Stream"
           >
-            AI Canvas
+            AI Live
           </button>
+          <button
+            onClick={() => setStreamMode('hls')}
+            className={`px-2 py-0.5 rounded transition-colors ${
+              streamMode === 'hls'
+                ? 'bg-blue-600 text-white font-bold'
+                : 'bg-[#070b14] text-slate-400 hover:text-white border border-slate-800'
+            }`}
+            title="HLS Cloud Stream (cctv.corp8.cloud)"
+          >
+            HLS
+          </button>
+          <a
+            href="https://cctv.corp8.cloud/"
+            target="_blank"
+            rel="noreferrer"
+            className="p-1 rounded bg-[#070b14] text-slate-400 hover:text-blue-400 hover:bg-slate-800 border border-slate-800 transition-colors"
+            title="Open Live Grid Portal in New Tab"
+          >
+            <ExternalLink className="h-3 w-3" />
+          </a>
         </div>
       </div>
 
