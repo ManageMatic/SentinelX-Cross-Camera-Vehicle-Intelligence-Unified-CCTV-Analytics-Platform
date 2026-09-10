@@ -19,6 +19,12 @@ from app.schemas.common import (
     PaginationParams,
     utc_now_iso,
 )
+from app.schemas.proxy import (
+    CameraStreamEndpoints,
+    StreamProxyInfo,
+    WHEPExchangeRequest,
+    WHEPExchangeResponse,
+)
 from app.schemas.resilience import (
     CircuitBreakerState,
     StreamHealthSummary,
@@ -64,4 +70,8 @@ __all__ = [
     "CircuitBreakerState",
     "StreamWatchdogRecord",
     "StreamHealthSummary",
+    "WHEPExchangeRequest",
+    "WHEPExchangeResponse",
+    "StreamProxyInfo",
+    "CameraStreamEndpoints",
 ]

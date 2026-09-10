@@ -299,6 +299,36 @@ This document tracks module-by-module implementation status, acceptance criteria
 - **Known Issues**: None.
 - **Next Module**: Module 8 — Low-Latency WebRTC (WHEP) & HLS Proxy
 
+---
 
+## Module 8 — Low-Latency WebRTC (WHEP) & HLS Proxy
 
-
+- **Status**: COMPLETE
+- **Implemented**:
+  - Implemented `WHEPExchangeRequest`, `WHEPExchangeResponse`, `StreamProxyInfo`, and `CameraStreamEndpoints` schemas in `backend/app/schemas/proxy.py`.
+  - Built `StreamProxyService` in `backend/app/services/stream_proxy.py`:
+    - WHEP standard RFC-compliant SDP offer/answer exchange endpoint for ultra-low latency (<200ms) browser streaming.
+    - MediaMTX / RTSPtoWeb / HLS fallback endpoint generator for multi-protocol resilience.
+    - Sanitized stream URL generator protecting sensitive CCTV RTSP credentials from leaking to browser clients.
+    - Dynamic snapshot JPEG extractor (`get_camera_snapshot_jpeg`) encoding live in-memory frames (`cv2.imencode`) or generating high-contrast tactical standby tiles for offline/disconnected feeds.
+  - Implemented RESTful Proxy API routes in `backend/app/api/v1/proxy.py`:
+    - `GET /api/v1/proxy/endpoints`: Aggregated catalog of browser-safe streaming endpoints for all cameras.
+    - `GET /api/v1/proxy/{camera_id}/info`: Streaming details (WHEP, HLS, snapshot URLs, FPS, resolution) for a specific camera.
+    - `POST /api/v1/proxy/{camera_id}/whep`: WHEP SDP handshake endpoint accepting `application/sdp` or JSON offer and returning `application/sdp` with `201 Created` and `Location` header.
+    - `GET /api/v1/proxy/{camera_id}/snapshot`: High-performance binary `image/jpeg` snapshot response for CCTV grid tiles.
+  - Built unit test suite in `backend/tests/unit/test_stream_proxy.py` verifying SDP exchange, endpoint sanitization, JPEG generation, and HTTP REST routes.
+- **Files Changed**:
+  - `backend/app/schemas/proxy.py`
+  - `backend/app/schemas/__init__.py`
+  - `backend/app/services/stream_proxy.py`
+  - `backend/app/api/v1/proxy.py`
+  - `backend/app/api/v1/api.py`
+  - `backend/tests/unit/test_stream_proxy.py`
+  - `docs/IMPLEMENTATION_PROGRESS.md`
+- **Tests**:
+  - Backend: `pytest backend/tests` (34/34 passed in 5.52s)
+  - Python Linter: `ruff check backend` (0 errors)
+  - Frontend: `npm run test` (4/4 passed in 2.43s)
+- **Test Result**: PASS
+- **Known Issues**: None.
+- **Next Module**: Module 9 — Frame Buffer Manager & Adaptive Backpressure Queue
