@@ -962,5 +962,39 @@ This document tracks module-by-module implementation status, acceptance criteria
 - **Test Result**: PASS
 - **Next Module**: Module 26 — GIS OpenStreetMap & Chronological Route Visualization (Frontend Track 7)
 
+---
+
+## Module 26 — GIS OpenStreetMap & Chronological Route Visualization
+
+- **Status**: COMPLETE
+- **Implemented**:
+  - Built `TacticalLeafletMap` in `frontend/src/components/gis/TacticalLeafletMap.tsx`:
+    - **Interactive OpenStreetMap / CartoDB Dark Matter GIS Canvas**: 100% Free & Open-Source (₹0 API key) tile layer with high-contrast tactical styling.
+    - **Geocoded CCTV Camera Pins**: Custom HTML markers (`L.divIcon`) with live heartbeat pulse rings (emerald for online, rose for offline) and popup cards detailing camera ID, district, FPS, and GPS coordinates.
+    - **Chronological Trajectory Polylines**: Glowing animated directional trajectory paths connecting vehicle sightings with speed and physical feasibility vector markers.
+    - **Numbered Waypoint Sighting Markers**: Sequenced markers (1, 2, 3, 4...) with interactive sighting inspection popups containing timestamp, velocity, leg distance, and anomaly classification.
+    - **Loitering Proximity Zones**: Dynamic semi-transparent concentric radius circles highlighting extended vehicle dwell times.
+  - Upgraded `MapPage` in `frontend/src/pages/MapPage.tsx`:
+    - **Gujarat District Hub Quick Jumps**: Instant zoom & pan navigation across Statewide Overview, Ahmedabad, Gandhinagar, Vadodara, Surat, and Rajkot.
+    - **Interactive Playback Replay Controller**: Play, pause, speed multiplier (1x, 2x, 5x), reset, and chronological leg stepping scrubbers.
+    - **Trajectory Preset Selector**: Switch seamlessly between real-time tracking simulations (`GJ01AB1234 - Ahmedabad-Gandhinagar Route`, `GJ05CD5678 - Vadodara-Surat Express`, or CCTV-only mode).
+    - **Layer Filter Controls**: Toggle camera pins, trajectory polylines, speed badges, and loitering zones independently.
+    - **Dual Sighting & GIS Node Directory**: Chronological sighting sequence cards with spatial-temporal plausibility indicators and searchable camera node directory.
+  - Built unit test suite in `frontend/src/__tests__/MapPage.test.tsx` testing tactical radar header, layer filters, trajectory preset selector, playback replay controls, sidebar tabs, and district jumps.
+- **Files Changed**:
+  - `frontend/src/index.css`
+  - `frontend/src/components/gis/TacticalLeafletMap.tsx`
+  - `frontend/src/pages/MapPage.tsx`
+  - `frontend/src/__tests__/MapPage.test.tsx`
+  - `frontend/src/__tests__/LiveGridPage.test.tsx`
+  - `docs/IMPLEMENTATION_PROGRESS.md`
+- **Tests**:
+  - Frontend: `npm test` (15/15 passed across 3 test suites in 3.78s)
+  - Backend: `pytest backend/tests` (113/113 passed in 8.79s)
+  - Python Linter: `ruff check backend` (0 errors)
+- **Test Result**: PASS
+- **Next Module**: Module 27 — Vehicle Intelligence, Watchlists & Alert Triage UI (Frontend Track 8)
+
+
 
 
