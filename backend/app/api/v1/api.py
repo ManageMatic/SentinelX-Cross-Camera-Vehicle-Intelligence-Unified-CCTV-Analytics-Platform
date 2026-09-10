@@ -7,6 +7,7 @@ from app.api.v1 import (
     detection,
     health,
     proxy,
+    reid,
     streams,
     system,
     tracking,
@@ -23,3 +24,4 @@ api_router.include_router(buffers.router, prefix="", tags=["Frame Buffers & Back
 api_router.include_router(detection.router, prefix="", tags=["AI Vehicle Detection"])
 api_router.include_router(tracking.router, prefix="", tags=["Multi-Object Tracking (ByteTrack)"])
 api_router.include_router(anpr.router, prefix="", tags=["ANPR & Plate Recognition"])
+api_router.include_router(reid.router, prefix="", tags=["Vehicle Re-ID & Visual Embeddings"])

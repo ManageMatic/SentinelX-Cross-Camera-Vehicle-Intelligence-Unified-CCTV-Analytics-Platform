@@ -477,5 +477,40 @@ This document tracks module-by-module implementation status, acceptance criteria
   - Python Linter: `ruff check backend` (0 errors)
   - Frontend: `npm run test` (4/4 passed in 6.91s)
 - **Test Result**: PASS
-- **Known Issues**: None.
 - **Next Module**: Module 13 — Vehicle Appearance Re-ID & Visual Embedding Generator
+
+---
+
+## Module 13 — Vehicle Appearance Re-ID & Visual Embedding Generator
+
+- **Status**: COMPLETE
+- **Implemented**:
+  - Implemented `VehicleColor`, `BodyStyle`, `VisualEmbeddingResult`, `SimilarityMatchResult`, `ReIDConfig`, and `ReIDTelemetry` in `backend/app/schemas/reid.py`.
+  - Built `ReIDEngine` in `backend/app/services/reid_engine.py`:
+    - **512-Dimensional L2-Normalized Visual Feature Extraction**: Spatial color histograms across 3 vertical car slices (roof/cabin, midriff/doors, lower bumper/wheels) normalized to unit sphere ($\|v\|_2 = 1.0$) for sub-millisecond cosine distance computation.
+    - **HSV/LAB Dominant Color Classification**: Dual-threshold color space segmentation identifying 10 standardized police vehicle colors (`WHITE`, `BLACK`, `SILVER`, `GREY`, `RED`, `BLUE`, `GREEN`, `YELLOW`, `ORANGE`, `BROWN`) with confidence scoring and secondary tone detection.
+    - **Body Style Estimation**: Aspect ratio and geometric profile classifier categorizing vehicles into 7 categories (`SEDAN`, `SUV`, `HATCHBACK`, `VAN`, `TRUCK`, `MOTORCYCLE`, `AUTO_RICKSHAW`).
+    - **Crop Quality Evaluator**: Laplacian variance sharpness, resolution sizing, and contrast metric scoring image quality for forensic ranking.
+    - **Cosine Similarity Matcher**: Fast dot product vector comparison with threshold grading (`HIGH_MATCH`, `POSSIBLE_MATCH`, `NO_MATCH`).
+  - Implemented RESTful Re-ID API routes in `backend/app/api/v1/reid.py`:
+    - `GET /api/v1/reid/telemetry`: Total extractions, extraction FPS, average latency, and color/body style distribution counters.
+    - `POST /api/v1/reid/extract`: Multipart image crop upload extracting 512-dim vector, dominant color, and body style.
+    - `POST /api/v1/reid/similarity`: Compare two 512-dim visual embeddings to return cosine similarity and match confidence.
+    - `POST /api/v1/reid/configure`: Dynamic tuning of embedding dimension, threshold, and feature models.
+  - Built unit test suite in `backend/tests/unit/test_reid_engine.py` testing color classification, body style estimation, crop quality scoring, L2 normalization, cosine similarity math, telemetry tracking, and REST routes.
+- **Files Changed**:
+  - `backend/app/schemas/reid.py`
+  - `backend/app/schemas/__init__.py`
+  - `backend/app/services/reid_engine.py`
+  - `backend/app/api/v1/reid.py`
+  - `backend/app/api/v1/api.py`
+  - `backend/tests/unit/test_reid_engine.py`
+  - `docs/IMPLEMENTATION_PROGRESS.md`
+- **Tests**:
+  - Backend: `pytest backend/tests` (63/63 passed in 9.15s)
+  - Python Linter: `ruff check backend` (0 errors)
+  - Frontend: `npm run test` (4/4 passed in 6.91s)
+- **Test Result**: PASS
+- **Known Issues**: None.
+- **Next Module**: Module 14 — Real-time Vehicle Event Ingestion & Indexer
+

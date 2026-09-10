@@ -47,6 +47,15 @@ from app.schemas.proxy import (
     WHEPExchangeRequest,
     WHEPExchangeResponse,
 )
+from app.schemas.reid import (
+    BodyStyle,
+    ReIDConfig,
+    ReIDTelemetry,
+    SimilarityComparisonRequest,
+    SimilarityMatchResult,
+    VehicleColor,
+    VisualEmbeddingResult,
+)
 from app.schemas.resilience import (
     CircuitBreakerState,
     StreamHealthSummary,
@@ -126,4 +135,11 @@ __all__ = [
     "ANPRBatchResult",
     "ANPRConfig",
     "ANPRTelemetry",
+    "VehicleColor",
+    "BodyStyle",
+    "VisualEmbeddingResult",
+    "SimilarityMatchResult",
+    "SimilarityComparisonRequest",
+    "ReIDConfig",
+    "ReIDTelemetry",
 ]
