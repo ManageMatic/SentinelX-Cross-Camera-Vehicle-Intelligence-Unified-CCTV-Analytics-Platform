@@ -137,3 +137,8 @@ class Settings(BaseSettings):
 # Singleton settings instance
 settings = Settings()
 settings.ensure_storage_directories()
+
+
+def get_settings() -> Settings:
+    """Return singleton application settings."""
+    return settings

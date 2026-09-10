@@ -209,5 +209,37 @@ This document tracks module-by-module implementation status, acceptance criteria
   - Backend: `pytest backend/tests` (20/20 passed in 0.44s)
 - **Test Result**: PASS
 - **Known Issues**: None.
-- **Next Module**: Module 5 — Dynamic Camera Catalog Ingestion Engine
+## Module 5 — Dynamic Camera Catalog Ingestion Engine
+
+- **Status**: COMPLETE
+- **Implemented**:
+  - Implemented `SentinelIngestCameraItem`, `CameraCreate`, `CameraUpdate`, `CameraResponse`, `CameraDetailResponse`, `CameraSourceResponse`, and `CameraSyncResult` in `backend/app/schemas/camera.py`.
+  - Built `CameraCatalogService` in `backend/app/services/camera_catalog.py` with asynchronous HTTP client fetching from Gujarat Police Sentinel `/api/ingest`, robust normalization of heterogeneous field names (`camera_id`/`id`, `lat`/`lng`/`latitude`, `stream_url`/`rtsp_url`), and idempotent database upserting (`added`, `updated`, `unchanged`, `errors`).
+  - Implemented RESTful endpoints in `backend/app/api/v1/cameras.py`:
+    - `GET /api/v1/cameras`: Paginated and searchable list with `live_status` and `department` filtering.
+    - `GET /api/v1/cameras/{camera_id}`: Detailed single camera inspection with auxiliary stream profiles and latest `CameraHealth` telemetry.
+    - `POST /api/v1/cameras/sync`: Immediate dynamic discovery sync from `/api/ingest` with execution latency tracking.
+    - `POST /api/v1/cameras`: Manual CCTV camera onboarding.
+    - `PATCH /api/v1/cameras/{camera_id}`: Update camera telemetry and AI activation flags.
+  - Added comprehensive automated unit test suite in `backend/tests/unit/test_camera_catalog.py` testing schema normalization, multi-sync idempotency, and REST API routes.
+- **Files Changed**:
+  - `backend/app/core/config.py`
+  - `backend/app/core/logging.py`
+  - `backend/app/schemas/camera.py`
+  - `backend/app/schemas/__init__.py`
+  - `backend/app/services/camera_catalog.py`
+  - `backend/app/api/v1/cameras.py`
+  - `backend/app/api/v1/api.py`
+  - `backend/tests/conftest.py`
+  - `backend/tests/unit/test_database.py`
+  - `backend/tests/unit/test_camera_catalog.py`
+  - `docs/IMPLEMENTATION_PROGRESS.md`
+- **Tests**:
+  - Backend: `pytest backend/tests` (23/23 passed in 0.73s)
+  - Python Linter: `ruff check backend` (0 errors)
+  - Frontend: `npm run test` (4/4 passed in 2.37s)
+- **Test Result**: PASS
+- **Known Issues**: None.
+- **Next Module**: Module 6 — RTSP / TCP Stream Ingestion Worker
+
 

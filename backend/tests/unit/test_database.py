@@ -23,25 +23,8 @@ from app.models import (
     WatchlistEntry,
     WatchlistPriority,
 )
-from app.models.base import Base
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-
-
-@pytest.fixture
-async def db_session():
-    """In-memory SQLite async session fixture for isolated model tests."""
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=False)
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
-    session_maker = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
-    async with session_maker() as session:
-        yield session
-
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-    await engine.dispose()
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @pytest.mark.asyncio

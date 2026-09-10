@@ -1,5 +1,16 @@
 """Pydantic Schemas Package for SentinelX."""
 
+from app.schemas.camera import (
+    CameraBase,
+    CameraCreate,
+    CameraDetailResponse,
+    CameraHealthResponse,
+    CameraResponse,
+    CameraSourceResponse,
+    CameraSyncResult,
+    CameraUpdate,
+    SentinelIngestCameraItem,
+)
 from app.schemas.common import (
     APIResponse,
     ErrorDetail,
@@ -26,4 +37,13 @@ __all__ = [
     "VersionData",
     "ComponentHealth",
     "SystemStatusData",
+    "SentinelIngestCameraItem",
+    "CameraBase",
+    "CameraCreate",
+    "CameraUpdate",
+    "CameraResponse",
+    "CameraDetailResponse",
+    "CameraSourceResponse",
+    "CameraHealthResponse",
+    "CameraSyncResult",
 ]

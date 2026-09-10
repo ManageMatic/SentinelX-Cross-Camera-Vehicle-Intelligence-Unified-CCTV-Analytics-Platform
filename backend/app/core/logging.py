@@ -49,3 +49,12 @@ def setup_logging() -> logging.Logger:
 
 
 logger = setup_logging()
+
+
+def get_logger(name: str = "sentinelx") -> logging.Logger:
+    """Return configured logger instance."""
+    if name == "sentinelx":
+        return logger
+    child = logging.getLogger(f"sentinelx.{name}")
+    child.setLevel(settings.LOG_LEVEL.value)
+    return child
