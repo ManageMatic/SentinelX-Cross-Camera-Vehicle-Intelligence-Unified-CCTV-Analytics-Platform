@@ -62,6 +62,14 @@ from app.schemas.events import (
     VehicleEventResponse,
     VehiclePlateResponse,
 )
+from app.schemas.journey import (
+    BehaviorPattern,
+    JourneyReconstructRequest,
+    JourneyTelemetry,
+    JourneyTimeline,
+    RouteLeg,
+    Waypoint,
+)
 from app.schemas.proxy import (
     CameraStreamEndpoints,
     StreamProxyInfo,
@@ -192,4 +200,10 @@ __all__ = [
     "VisualMatchRequest",
     "VisualMatchCandidate",
     "CorrelationTelemetry",
+    "Waypoint",
+    "RouteLeg",
+    "BehaviorPattern",
+    "JourneyTimeline",
+    "JourneyReconstructRequest",
+    "JourneyTelemetry",
 ]

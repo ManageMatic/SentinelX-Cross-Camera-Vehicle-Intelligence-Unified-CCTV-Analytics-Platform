@@ -617,8 +617,46 @@ This document tracks module-by-module implementation status, acceptance criteria
   - Python Linter: `ruff check backend` (0 errors)
   - Frontend: `npm run test` (4/4 passed in 6.52s)
 - **Test Result**: PASS
-- **Known Issues**: None.
 - **Next Module**: Module 17 — Chronological Journey & Route Timeline Reconstructor
+
+---
+
+## Module 17 — Chronological Journey & Route Timeline Reconstructor
+
+- **Status**: COMPLETE
+- **Implemented**:
+  - Implemented `Waypoint`, `RouteLeg`, `BehaviorPattern`, `JourneyTimeline`, `JourneyReconstructRequest`, and `JourneyTelemetry` in `backend/app/schemas/journey.py`.
+  - Built `JourneyReconstructorService` in `backend/app/services/journey_service.py`:
+    - **Point-to-Point Journey Timeline Builder**: Reconstructs sequential movement history from initial entry to destination with detailed waypoint metadata (coordinates, sequence, arrival, departure, dwell time, snapshot URI, and normalized plate readings).
+    - **Transit Leg Breakdown**: Computes leg-by-leg metrics between consecutive camera observations (start/arrival time, segment distance in km, transit duration in seconds/minutes, average speed in km/h, and anomaly flags).
+    - **Behavioral Pattern & Suspicious Route Analysis**:
+      - `LOITERING_DWELL`: Detects extended stationary dwell ($> 15$ minutes) at sensitive checkpoints and junctions.
+      - `CIRCULAR_LOOPING_CRUISE`: Detects repeated passes ($\ge 2$ times) through identical camera locations across a journey, identifying circular cruising or reconnaissance behaviors.
+      - `RAPID_TRANSIT`: Flags high-speed transit surges between consecutive checkpoints.
+    - **RFC 7946 GIS GeoJSON FeatureCollection Export**: Generates standards-compliant GeoJSON with Point features (waypoints) and LineString features (trajectory paths) for MapLibre / Leaflet map rendering.
+    - Real-time journey telemetry tracking total reconstructions, loops detected, loitering events flagged, and execution latency.
+  - Implemented RESTful Journey API routes in `backend/app/api/v1/journey.py`:
+    - `POST /api/v1/journey/reconstruct`: Full journey reconstruction with timeline, legs, waypoints, behavior analysis, and GeoJSON.
+    - `GET /api/v1/journey/{plate}/geojson`: Return RFC 7946 GeoJSON FeatureCollection for MapLibre / Leaflet.
+    - `POST /api/v1/journey/analyze-behavior`: Standalone behavioral pattern analysis endpoint.
+    - `GET /api/v1/journey/telemetry`: Telemetry metrics for journey reconstructor service.
+  - Built unit test suite in `backend/tests/unit/test_journey_reconstructor.py` testing journey reconstruction, GeoJSON format, loitering detection, circular loop detection, and REST API routes.
+- **Files Changed**:
+  - `backend/app/schemas/journey.py`
+  - `backend/app/schemas/__init__.py`
+  - `backend/app/services/journey_service.py`
+  - `backend/app/api/v1/journey.py`
+  - `backend/app/api/v1/api.py`
+  - `backend/tests/unit/test_journey_reconstructor.py`
+  - `docs/IMPLEMENTATION_PROGRESS.md`
+- **Tests**:
+  - Backend: `pytest backend/tests` (81/81 passed in 11.22s)
+  - Python Linter: `ruff check backend` (0 errors)
+  - Frontend: `npm run test` (4/4 passed in 6.52s)
+- **Test Result**: PASS
+- **Known Issues**: None.
+- **Next Module**: Module 18 — Real-Time Watchlist & Hotlist Matching Engine
+
 
 
 
