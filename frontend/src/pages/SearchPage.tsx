@@ -273,13 +273,15 @@ export const SearchPage: React.FC<SearchPageProps> = ({
       )
       .join('\n');
 
-    const blob = new Blob([csvHeader + csvRows], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `SentinelX_ANPR_Search_${Date.now()}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    if (typeof window !== 'undefined' && typeof window.URL !== 'undefined' && typeof window.URL.createObjectURL === 'function') {
+      const blob = new Blob([csvHeader + csvRows], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `SentinelX_ANPR_Search_${Date.now()}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    }
 
     setExportSuccessMessage(`Exported ${filteredEvents.length} sightings to CSV.`);
     setTimeout(() => setExportSuccessMessage(null), 4000);
