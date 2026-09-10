@@ -33,6 +33,18 @@ from app.schemas.common import (
     PaginationParams,
     utc_now_iso,
 )
+from app.schemas.correlation import (
+    CameraSightingNode,
+    CloneDetectionRequest,
+    ClonedPlateAnomaly,
+    CorrelationPlausibility,
+    CorrelationRequest,
+    CorrelationResult,
+    CorrelationTelemetry,
+    SightingHop,
+    VisualMatchCandidate,
+    VisualMatchRequest,
+)
 from app.schemas.detection import (
     BoundingBox,
     DetectedVehicle,
@@ -170,4 +182,14 @@ __all__ = [
     "SearchResultItem",
     "FuzzyPlateCandidate",
     "SearchTelemetry",
+    "CorrelationPlausibility",
+    "CameraSightingNode",
+    "SightingHop",
+    "CorrelationRequest",
+    "CorrelationResult",
+    "CloneDetectionRequest",
+    "ClonedPlateAnomaly",
+    "VisualMatchRequest",
+    "VisualMatchCandidate",
+    "CorrelationTelemetry",
 ]
