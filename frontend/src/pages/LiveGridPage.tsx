@@ -29,8 +29,12 @@ export const LiveGridPage: React.FC<LiveGridPageProps> = ({ cameras }) => {
   const [simulatedAlertCameraId, setSimulatedAlertCameraId] = useState<string | null>(null);
 
   const [showIntegratorGuide, setShowIntegratorGuide] = useState(false);
-  const [authEmail, setAuthEmail] = useState(localStorage.getItem('sentinel_email') || '');
-  const [authPassword, setAuthPassword] = useState(localStorage.getItem('sentinel_password') || '');
+  const [authEmail, setAuthEmail] = useState(
+    localStorage.getItem('sentinel_email') || 'ishanmahida123@gmail.com'
+  );
+  const [authPassword, setAuthPassword] = useState(
+    localStorage.getItem('sentinel_password') || '7M96-5VHZ-HL7B'
+  );
   const [activeCodeTab, setActiveCodeTab] = useState<'python' | 'gstreamer' | 'ffmpeg'>('python');
 
   const handleSaveCredentials = (e: React.FormEvent) => {
