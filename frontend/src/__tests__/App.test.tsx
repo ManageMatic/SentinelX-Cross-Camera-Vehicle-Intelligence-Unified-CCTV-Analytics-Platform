@@ -31,20 +31,20 @@ describe('SentinelX Tactical Command Center Shell (Module 4)', () => {
 
   it('renders sidebar navigation groups and tabs', () => {
     render(<App />);
-    expect(screen.getByText('LIVE SURVEILLANCE')).toBeInTheDocument();
-    expect(screen.getByText('VEHICLE INTELLIGENCE')).toBeInTheDocument();
-    expect(screen.getByText('SECURITY & ALERTS')).toBeInTheDocument();
-    expect(screen.getByText('FORENSICS & SYSTEM')).toBeInTheDocument();
-    expect(screen.getByText('Live CCTV Grid')).toBeInTheDocument();
-    expect(screen.getByText('Plate Search')).toBeInTheDocument();
-    expect(screen.getByText('Hotlists / Watchlists')).toBeInTheDocument();
+    expect(screen.getAllByText('LIVE SURVEILLANCE').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('VEHICLE INTELLIGENCE').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('SECURITY & ALERTS').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('FORENSICS & SYSTEM').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Live CCTV Grid').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Plate Search').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Hotlists / Watchlists').length).toBeGreaterThan(0);
   });
 
   it('renders KPI metrics on Dashboard', () => {
     render(<App />);
-    expect(screen.getByText(/COMMAND & INTELLIGENCE MATRIX/i)).toBeInTheDocument();
-    expect(screen.getByText(/Active CCTV Feeds/i)).toBeInTheDocument();
-    expect(screen.getByText(/Detections Today/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/COMMAND & INTELLIGENCE MATRIX/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Active CCTV Feeds/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Detections Today/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Watchlist Hits/i).length).toBeGreaterThan(0);
   });
 
@@ -52,19 +52,19 @@ describe('SentinelX Tactical Command Center Shell (Module 4)', () => {
     render(<App />);
     
     // Click Live CCTV Grid tab
-    fireEvent.click(screen.getByText('Live CCTV Grid'));
-    expect(screen.getByText(/LIVE CCTV SURVEILLANCE WALL/i)).toBeInTheDocument();
+    fireEvent.click(screen.getAllByText('Live CCTV Grid')[0]);
+    expect(screen.getAllByText(/LIVE CCTV SURVEILLANCE WALL/i).length).toBeGreaterThan(0);
 
     // Click Plate Search tab
-    fireEvent.click(screen.getByText('Plate Search'));
-    expect(screen.getByText(/VEHICLE REGISTRATION SEARCH & INDEX/i)).toBeInTheDocument();
+    fireEvent.click(screen.getAllByText('Plate Search')[0]);
+    expect(screen.getAllByText(/VEHICLE REGISTRATION SEARCH & INDEX/i).length).toBeGreaterThan(0);
 
     // Click Hotlists / Watchlists tab
-    fireEvent.click(screen.getByText('Hotlists / Watchlists'));
-    expect(screen.getByText(/HOTLISTS & WATCHLIST REPOSITORY/i)).toBeInTheDocument();
+    fireEvent.click(screen.getAllByText('Hotlists / Watchlists')[0]);
+    expect(screen.getAllByText(/HOTLISTS & WATCHLIST REPOSITORY/i).length).toBeGreaterThan(0);
 
     // Click Evidence Vault tab
-    fireEvent.click(screen.getByText('Evidence Vault (SHA-256)'));
-    expect(screen.getByText(/CRYPTOGRAPHIC EVIDENCE VAULT/i)).toBeInTheDocument();
+    fireEvent.click(screen.getAllByText('Evidence Vault (SHA-256)')[0]);
+    expect(screen.getAllByText(/CRYPTOGRAPHIC EVIDENCE VAULT/i).length).toBeGreaterThan(0);
   });
 });

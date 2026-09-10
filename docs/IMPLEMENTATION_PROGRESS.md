@@ -930,4 +930,37 @@ This document tracks module-by-module implementation status, acceptance criteria
 - **Test Result**: PASS
 - **Next Module**: Module 25 — Live Multi-Camera CCTV Grid & WHEP Video Player (Frontend Track 6)
 
+---
+
+## Module 25 — Live Multi-Camera CCTV Grid & WHEP Video Player
+
+- **Status**: COMPLETE
+- **Implemented**:
+  - Built `WhepVideoPlayer` in `frontend/src/components/video/WhepVideoPlayer.tsx`:
+    - **Ultra-Low-Latency WHEP/WebRTC Video Player**: Interactive HTML5 Canvas stream simulation with WebRTC/WHEP signaling endpoints fallback.
+    - **Dynamic Bounding Box Overlay**: Real-time vehicle detection overlays with confidence score, classification tag, and animated bounding box targeting.
+    - **Digital PTZ (Pan-Tilt-Zoom)**: Smooth 1x-3x digital zoom with interactive pan offset sliders.
+    - **Single-Click Forensic Frame Snapshot**: Downloads high-resolution timestamped forensic snapshot directly from live stream canvas.
+    - **Live Telemetry Bar**: Real-time FPS (25-30 fps), Bitrate (1.8-2.6 Mbps), stream latency (120-180ms), codec (H.264/H.265), and live online pulse indicator.
+    - **Critical Hotlist Visual Alert HUD**: Pulsing red alert banner and audible visual distress state when hotlist vehicle is detected in feed.
+  - Upgraded `LiveGridPage` in `frontend/src/pages/LiveGridPage.tsx`:
+    - **Multi-Grid Layout Switcher**: 1x1 full focus, 2x2 quad multi-view, 3x3 9-feed matrix, and 4x4 16-feed statewide surveillance wall.
+    - **Gujarat District Quick Filter Drawer**: Seamless filtering across Ahmedabad, Surat, Vadodara, Rajkot, Gandhinagar, and Bhavnagar districts.
+    - **Live Camera Quick Search**: Instant filtering by camera ID, junction name, or street location.
+    - **Hotlist Alert Simulation**: Command button to trigger real-time vehicle interception alert across any active camera tile.
+  - Built unit test suite in `frontend/src/__tests__/LiveGridPage.test.tsx` testing layout switching, search filtering, district drawer toggling, and hotlist alert HUD.
+- **Files Changed**:
+  - `frontend/src/components/video/WhepVideoPlayer.tsx`
+  - `frontend/src/pages/LiveGridPage.tsx`
+  - `frontend/src/__tests__/LiveGridPage.test.tsx`
+  - `frontend/src/__tests__/App.test.tsx`
+  - `docs/IMPLEMENTATION_PROGRESS.md`
+- **Tests**:
+  - Frontend: `npm test` (9/9 passed across 2 test suites in 2.76s)
+  - Backend: `pytest backend/tests` (113/113 passed in 9.05s)
+  - Python Linter: `ruff check backend` (0 errors)
+- **Test Result**: PASS
+- **Next Module**: Module 26 — GIS OpenStreetMap & Chronological Route Visualization (Frontend Track 7)
+
+
 
