@@ -70,6 +70,13 @@ from app.schemas.resilience import (
     StreamHealthSummary,
     StreamWatchdogRecord,
 )
+from app.schemas.search import (
+    FuzzyPlateCandidate,
+    SearchResultItem,
+    SearchTelemetry,
+    VehicleSearchQuery,
+    VehicleSearchResponse,
+)
 from app.schemas.stream import (
     StreamPoolStatus,
     StreamWorkerState,
@@ -158,4 +165,9 @@ __all__ = [
     "VehicleEventResponse",
     "EventIndexerTelemetry",
     "RecentEventsFilter",
+    "VehicleSearchQuery",
+    "VehicleSearchResponse",
+    "SearchResultItem",
+    "FuzzyPlateCandidate",
+    "SearchTelemetry",
 ]

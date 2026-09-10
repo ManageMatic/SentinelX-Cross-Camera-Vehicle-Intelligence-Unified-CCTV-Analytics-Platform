@@ -9,6 +9,7 @@ from app.api.v1 import (
     health,
     proxy,
     reid,
+    search,
     streams,
     system,
     tracking,
@@ -27,3 +28,4 @@ api_router.include_router(tracking.router, prefix="", tags=["Multi-Object Tracki
 api_router.include_router(anpr.router, prefix="", tags=["ANPR & Plate Recognition"])
 api_router.include_router(reid.router, prefix="", tags=["Vehicle Re-ID & Visual Embeddings"])
 api_router.include_router(events.router, prefix="", tags=["Vehicle Event Ingestion & Indexer"])
+api_router.include_router(search.router, prefix="", tags=["Sub-200ms Vehicle Search Engine"])
