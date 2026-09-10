@@ -3,6 +3,7 @@
 from app.api.v1 import (
     alerts,
     anpr,
+    audit,
     buffers,
     cameras,
     correlation,
@@ -47,4 +48,8 @@ api_router.include_router(
 api_router.include_router(
     evidence.router, prefix="", tags=["Forensic Evidence Vault & Cryptographic Chain of Custody"]
 )
+api_router.include_router(
+    audit.router, prefix="", tags=["Append-Only Immutable Audit Trail"]
+)
+
 

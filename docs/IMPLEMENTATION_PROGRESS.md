@@ -771,8 +771,44 @@ This document tracks module-by-module implementation status, acceptance criteria
   - Backend: `pytest backend/tests` (94/94 passed in 7.25s)
   - Python Linter: `ruff check backend` (0 errors)
   - Frontend: `npm run test` (4/4 passed in 2.37s)
-- **Test Result**: PASS
 - **Next Module**: Module 21 — Append-Only Immutable Audit Logging Engine
+
+---
+
+## Module 21 — Append-Only Immutable Audit Logging Engine
+
+- **Status**: COMPLETE
+- **Implemented**:
+  - Implemented `AuditAction`, `AuditStatus`, `AuditExportFormat`, `AuditLogCreate`, `AuditLogResponse`, `AuditLogListResponse`, `AuditExportRequest`, `AuditExportResponse`, `AuditChainVerification`, and `AuditTelemetry` in `backend/app/schemas/audit.py`.
+  - Built `AuditLoggingEngine` in `backend/app/services/audit_service.py`:
+    - **Non-Destructive Append-Only Storage**: Atomically logs every operator action (vehicle searches, watchlist creation/updates, alert triage, evidence viewing/downloads, courtroom exports) with officer badge/username, IP address, user agent, action context details, and success/failure status.
+    - **Multi-Parameter Audit Querying**: High-performance querying across users, action categories, resources, date ranges, and execution statuses.
+    - **Compliance-Ready Audit Exporting**: Generates official audit reports in CSV, JSON, and NDJSON formats with cryptographic SHA-256 manifest checksums and self-auditing export tracking.
+    - **Cryptographic Rolling Hash Chaining**: Mathematical verification of sequential hash chains ($H_i = \text{SHA256}(H_{i-1} \parallel \text{record}_i)$) guaranteeing zero retroactive insertion, tampering, or deletion of log entries.
+    - **Live Audit Telemetry**: Real-time tracking of log volume, 24-hour activity surge, action breakdown distribution, failed action counts, and sub-millisecond logging latency.
+  - Implemented REST API routes in `backend/app/api/v1/audit.py`:
+    - `POST /api/v1/audit/log`: Append an immutable audit event record.
+    - `GET /api/v1/audit`: Query and filter audit trail with pagination.
+    - `GET /api/v1/audit/{audit_id}`: Retrieve single audit record details.
+    - `POST /api/v1/audit/export`: Generate signed compliance export (CSV/JSON/NDJSON) with SHA-256 digest.
+    - `POST /api/v1/audit/verify-chain`: Verify sequential cryptographic hash chain integrity.
+    - `GET /api/v1/audit/telemetry`: Retrieve live audit engine telemetry.
+  - Built unit test suite in `backend/tests/unit/test_audit_engine.py` testing append-only insertion, query filtering by multiple fields, CSV/JSON/NDJSON exports with SHA-256 integrity, cryptographic rolling hash chain verification, and REST API endpoints.
+- **Files Changed**:
+  - `backend/app/schemas/audit.py`
+  - `backend/app/schemas/__init__.py`
+  - `backend/app/services/audit_service.py`
+  - `backend/app/api/v1/audit.py`
+  - `backend/app/api/v1/api.py`
+  - `backend/tests/unit/test_audit_engine.py`
+  - `docs/IMPLEMENTATION_PROGRESS.md`
+- **Tests**:
+  - Backend: `pytest backend/tests` (99/99 passed in 7.32s)
+  - Python Linter: `ruff check backend` (0 errors)
+  - Frontend: `npm run test` (4/4 passed in 2.57s)
+- **Test Result**: PASS
+- **Next Module**: Module 22 — Role-Based Access Control (RBAC) & Argon2id Authentication
+
 
 
 

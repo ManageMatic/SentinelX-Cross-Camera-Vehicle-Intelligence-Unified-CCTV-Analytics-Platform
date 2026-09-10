@@ -32,16 +32,18 @@ def synthetic_jpeg() -> bytes:
 @pytest.mark.asyncio
 async def test_archive_evidence_and_sha256(synthetic_jpeg):
     """Test cryptographic SHA-256 calculation and atomic disk archiving."""
+    import uuid
+    uid = uuid.uuid4().hex[:8]
     async with AsyncSessionLocal() as session:
         # Create test camera
         cam = Camera(
-            id="CAM-VAULT-01",
-            external_camera_id="EXT-VAULT-01",
+            id=f"CAM-VAULT-{uid}",
+            external_camera_id=f"EXT-VAULT-{uid}",
             name="Forensic Vault Test Cam",
             location_name="Junction Alpha",
             latitude=23.0225,
             longitude=72.5714,
-            rtsp_url="rtsp://localhost:8554/cam1",
+            rtsp_url=f"rtsp://localhost:8554/{uid}",
             live_status=True,
         )
         session.add(cam)
@@ -51,7 +53,7 @@ async def test_archive_evidence_and_sha256(synthetic_jpeg):
 
         evidence_rec = await evidence_vault_service.archive_evidence(
             db=session,
-            camera_id="CAM-VAULT-01",
+            camera_id=f"CAM-VAULT-{uid}",
             image_bytes=synthetic_jpeg,
             file_type=EvidenceType.SNAPSHOT,
         )
@@ -65,15 +67,17 @@ async def test_archive_evidence_and_sha256(synthetic_jpeg):
 @pytest.mark.asyncio
 async def test_verify_evidence_integrity_match_and_tamper(synthetic_jpeg):
     """Test verification matching and tamper detection when file content is altered."""
+    import uuid
+    uid = uuid.uuid4().hex[:8]
     async with AsyncSessionLocal() as session:
         cam = Camera(
-            id="CAM-VAULT-02",
-            external_camera_id="EXT-VAULT-02",
+            id=f"CAM-VAULT-{uid}",
+            external_camera_id=f"EXT-VAULT-{uid}",
             name="Forensic Cam 2",
             location_name="Highway Beta",
             latitude=23.03,
             longitude=72.58,
-            rtsp_url="rtsp://localhost:8554/cam2",
+            rtsp_url=f"rtsp://localhost:8554/{uid}",
             live_status=True,
         )
         session.add(cam)
@@ -81,7 +85,7 @@ async def test_verify_evidence_integrity_match_and_tamper(synthetic_jpeg):
 
         evidence_rec = await evidence_vault_service.archive_evidence(
             db=session,
-            camera_id="CAM-VAULT-02",
+            camera_id=f"CAM-VAULT-{uid}",
             image_bytes=synthetic_jpeg,
             file_type=EvidenceType.SNAPSHOT,
         )
@@ -105,15 +109,17 @@ async def test_verify_evidence_integrity_match_and_tamper(synthetic_jpeg):
 @pytest.mark.asyncio
 async def test_missing_file_integrity():
     """Test missing file verification handling."""
+    import uuid
+    uid = uuid.uuid4().hex[:8]
     async with AsyncSessionLocal() as session:
         cam = Camera(
-            id="CAM-VAULT-03",
-            external_camera_id="EXT-VAULT-03",
+            id=f"CAM-VAULT-{uid}",
+            external_camera_id=f"EXT-VAULT-{uid}",
             name="Forensic Cam 3",
             location_name="Missing Cam Point",
             latitude=23.04,
             longitude=72.59,
-            rtsp_url="rtsp://localhost:8554/cam3",
+            rtsp_url=f"rtsp://localhost:8554/{uid}",
             live_status=True,
         )
         session.add(cam)
@@ -121,7 +127,7 @@ async def test_missing_file_integrity():
 
         evidence_rec = await evidence_vault_service.archive_evidence(
             db=session,
-            camera_id="CAM-VAULT-03",
+            camera_id=f"CAM-VAULT-{uid}",
             image_bytes=b"sample-bytes-to-delete",
             file_type=EvidenceType.PLATE_CROP,
         )
@@ -137,15 +143,17 @@ async def test_missing_file_integrity():
 @pytest.mark.asyncio
 async def test_forensic_watermarking_and_section_65b(synthetic_jpeg):
     """Test stamping legal metadata banner and generating Section 65B legal certificate."""
+    import uuid
+    uid = uuid.uuid4().hex[:8]
     async with AsyncSessionLocal() as session:
         cam = Camera(
-            id="CAM-VAULT-04",
-            external_camera_id="EXT-VAULT-04",
+            id=f"CAM-VAULT-{uid}",
+            external_camera_id=f"EXT-VAULT-{uid}",
             name="Forensic Cam 4",
             location_name="SG Highway Junction",
             latitude=23.05,
             longitude=72.60,
-            rtsp_url="rtsp://localhost:8554/cam4",
+            rtsp_url=f"rtsp://localhost:8554/{uid}",
             live_status=True,
         )
         session.add(cam)
@@ -154,10 +162,11 @@ async def test_forensic_watermarking_and_section_65b(synthetic_jpeg):
 
         evidence_rec = await evidence_vault_service.archive_evidence(
             db=session,
-            camera_id="CAM-VAULT-04",
+            camera_id=f"CAM-VAULT-{uid}",
             image_bytes=synthetic_jpeg,
             file_type=EvidenceType.SNAPSHOT,
         )
+
 
         # Watermark
         req = ForensicWatermarkRequest(

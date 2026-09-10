@@ -7,6 +7,18 @@ from app.schemas.anpr import (
     ANPRTelemetry,
     PlateCategory,
 )
+from app.schemas.audit import (
+    AuditAction,
+    AuditChainVerification,
+    AuditExportFormat,
+    AuditExportRequest,
+    AuditExportResponse,
+    AuditLogCreate,
+    AuditLogListResponse,
+    AuditLogResponse,
+    AuditStatus,
+    AuditTelemetry,
+)
 from app.schemas.buffer import (
     BackpressureLevel,
     BufferConfig,
@@ -276,5 +288,14 @@ __all__ = [
     "Section65BCertificate",
     "CourtroomExportPackage",
     "EvidenceTelemetry",
+    "AuditAction",
+    "AuditStatus",
+    "AuditExportFormat",
+    "AuditLogCreate",
+    "AuditLogResponse",
+    "AuditLogListResponse",
+    "AuditExportRequest",
+    "AuditExportResponse",
+    "AuditChainVerification",
+    "AuditTelemetry",
 ]
-
