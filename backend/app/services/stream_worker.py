@@ -203,6 +203,14 @@ class RTSPStreamWorker:
                 self._last_frame_time = now_utc
                 self._record_frame_arrival(time.time())
 
+            # Dispatch to Frame Buffer Manager
+            try:
+                from app.services.frame_buffer import frame_buffer_manager
+
+                frame_buffer_manager.push_frame(self.camera_id, video_frame)
+            except Exception as e:
+                logger.debug(f"Frame buffer push error for {self.external_camera_id}: {e}")
+
             if self.frame_callback:
                 try:
                     self.frame_callback(video_frame)
@@ -276,6 +284,14 @@ class RTSPStreamWorker:
                     self._total_frames_read += 1
                     self._last_frame_time = now_utc
                     self._record_frame_arrival(time.time())
+
+                # Dispatch to Frame Buffer Manager
+                try:
+                    from app.services.frame_buffer import frame_buffer_manager
+
+                    frame_buffer_manager.push_frame(self.camera_id, video_frame)
+                except Exception as e:
+                    logger.debug(f"Frame buffer push error for {self.external_camera_id}: {e}")
 
                 if self.frame_callback:
                     try:

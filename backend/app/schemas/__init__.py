@@ -1,5 +1,12 @@
 """Pydantic Schemas Package for SentinelX."""
 
+from app.schemas.buffer import (
+    BackpressureLevel,
+    BufferConfig,
+    BufferPoolStatus,
+    CameraBufferStats,
+    FrameDropStrategy,
+)
 from app.schemas.camera import (
     CameraBase,
     CameraCreate,
@@ -74,4 +81,9 @@ __all__ = [
     "WHEPExchangeResponse",
     "StreamProxyInfo",
     "CameraStreamEndpoints",
+    "BackpressureLevel",
+    "FrameDropStrategy",
+    "BufferConfig",
+    "CameraBufferStats",
+    "BufferPoolStatus",
 ]

@@ -330,5 +330,42 @@ This document tracks module-by-module implementation status, acceptance criteria
   - Python Linter: `ruff check backend` (0 errors)
   - Frontend: `npm run test` (4/4 passed in 2.43s)
 - **Test Result**: PASS
-- **Known Issues**: None.
 - **Next Module**: Module 9 — Frame Buffer Manager & Adaptive Backpressure Queue
+
+---
+
+## Module 9 — Frame Buffer Manager & Adaptive Backpressure Queue
+
+- **Status**: COMPLETE
+- **Implemented**:
+  - Implemented `BackpressureLevel` (`NORMAL`, `MODERATE`, `CRITICAL`), `FrameDropStrategy` (`DROP_OLDEST`, `DROP_NEWEST`, `DROP_NON_KEYFRAME`, `DECIMATE_DYNAMIC`), `BufferConfig`, `CameraBufferStats`, and `BufferPoolStatus` in `backend/app/schemas/buffer.py`.
+  - Built `CameraFrameBuffer` and `FrameBufferManager` in `backend/app/services/frame_buffer.py`:
+    - Thread-safe, bounded ring buffer queues (`deque(maxlen=max_capacity)`) per CCTV stream.
+    - FPS Decimation Rate-Limiter allowing configurable AI target extraction rates (e.g. 10 FPS from 25/30 FPS raw feeds) to avoid duplicate compute overhead.
+    - Intelligent congestion backpressure policies (`DROP_OLDEST`, `DROP_NEWEST`, `DROP_NON_KEYFRAME`, `DECIMATE_DYNAMIC`) protecting AI inference workers from memory exhaustion and latency spikes.
+    - Real-time sliding-window FPS measurement (`ingest_fps`, `dispatch_fps`) and drop-rate telemetry.
+    - Seamless push-hook integration directly inside `RTSPStreamWorker` synthetic and TCP ingestion loops.
+  - Implemented RESTful Buffer API routes in `backend/app/api/v1/buffers.py`:
+    - `GET /api/v1/buffers/status`: Aggregate telemetry, total active queues, critical backpressure count, and platform-wide buffer utilization.
+    - `GET /api/v1/buffers/{camera_id}/stats`: Real-time queue utilization, drop rates, and backpressure state for a specific camera.
+    - `POST /api/v1/buffers/{camera_id}/configure`: Dynamic runtime tuning of buffer capacity (1-200), target AI FPS (1-60), and drop strategies.
+    - `POST /api/v1/buffers/{camera_id}/clear`: Purge stale in-memory frames for a single camera.
+    - `POST /api/v1/buffers/clear-all`: Purge all in-memory frame buffers across the platform.
+  - Built comprehensive unit test suite in `backend/tests/unit/test_frame_buffer.py` testing bounded capacity, decimation rate-limiting, keyframe priority survival, manager lifecycle, and REST API routes.
+- **Files Changed**:
+  - `backend/app/schemas/buffer.py`
+  - `backend/app/schemas/__init__.py`
+  - `backend/app/services/frame_buffer.py`
+  - `backend/app/services/stream_worker.py`
+  - `backend/app/api/v1/buffers.py`
+  - `backend/app/api/v1/api.py`
+  - `backend/tests/unit/test_frame_buffer.py`
+  - `docs/IMPLEMENTATION_PROGRESS.md`
+- **Tests**:
+  - Backend: `pytest backend/tests` (40/40 passed in 8.60s)
+  - Python Linter: `ruff check backend` (0 errors)
+  - Frontend: `npm run test` (4/4 passed in 6.69s)
+- **Test Result**: PASS
+- **Known Issues**: None.
+- **Next Module**: Module 10 — Multi-Class Vehicle Detection Engine (YOLOX / ONNX)
+
