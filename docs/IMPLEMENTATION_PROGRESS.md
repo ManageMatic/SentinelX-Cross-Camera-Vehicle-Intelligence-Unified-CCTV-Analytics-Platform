@@ -698,7 +698,41 @@ This document tracks module-by-module implementation status, acceptance criteria
   - Frontend: `npm run test` (4/4 passed in 6.52s)
 - **Test Result**: PASS
 - **Known Issues**: None.
-- **Next Module**: Module 19 — Real-time WebSocket Alert Dispatcher & Notification Hub
+---
+
+## Module 19 — Real-time WebSocket Alert Dispatcher & Notification Hub
+
+- **Status**: COMPLETE
+- **Implemented**:
+  - Implemented `AlertBroadcastPayload`, `WebSocketClientMessage`, `WebSocketHubStats`, and `WebSocketMessageType` in `backend/app/schemas/websocket.py`.
+  - Built `AlertDispatcherHub` in `backend/app/services/alert_dispatcher.py`:
+    - **Channel Subscription Routing**: Granular channel topics (`all`, `critical_only`, `camera:{id}`, `category:{cat}`) allowing operator workstations to filter noise.
+    - **Sub-500ms Non-blocking Broadcast**: Asynchronous fan-out dispatching with dead-socket reaping to ensure zero latency overhead.
+    - **In-Memory Ring-Buffer Backlog Replay**: Replays last $N=50$ alerts upon client reconnection to prevent missed critical hits without database roundtrips.
+    - **Bidirectional Heartbeat Ping/Pong & Telemetry**: Dynamic client tracking, uptime monitoring, and message counters.
+    - **Automated Watchlist Hook**: Connected `WatchlistMatchingEngine` to automatically push hotlist matches directly to the WebSocket hub upon generation.
+  - Implemented REST & WebSocket routes in `backend/app/api/v1/alerts.py`:
+    - `WebSocket /api/v1/alerts/ws`: Real-time bidirectional socket connection.
+    - `POST /api/v1/alerts/broadcast`: Administrative broadcast endpoint.
+    - `GET /api/v1/alerts/backlog`: Retrieve recent alert ring-buffer replay.
+    - `GET /api/v1/alerts/ws-stats`: Hub diagnostic statistics and connected client counts.
+  - Built unit test suite in `backend/tests/unit/test_alert_dispatcher.py` testing connection lifecycles, channel subscription filtering, backlog replay, and REST endpoints.
+- **Files Changed**:
+  - `backend/app/schemas/websocket.py`
+  - `backend/app/schemas/__init__.py`
+  - `backend/app/services/alert_dispatcher.py`
+  - `backend/app/services/watchlist_service.py`
+  - `backend/app/api/v1/alerts.py`
+  - `backend/app/api/v1/api.py`
+  - `backend/tests/unit/test_alert_dispatcher.py`
+  - `docs/IMPLEMENTATION_PROGRESS.md`
+- **Tests**:
+  - Backend: `pytest backend/tests` (89/89 passed in 7.11s)
+  - Python Linter: `ruff check backend` (0 errors)
+  - Frontend: `npm run test` (4/4 passed in 6.52s)
+- **Test Result**: PASS
+- **Next Module**: Module 20 — Forensic Evidence Vault & Cryptographic SHA-256 Chain of Custody
+
 
 
 

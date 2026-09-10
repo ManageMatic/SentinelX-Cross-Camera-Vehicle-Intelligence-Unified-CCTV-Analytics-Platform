@@ -1,6 +1,7 @@
 """Master API Router for v1 endpoints."""
 
 from app.api.v1 import (
+    alerts,
     anpr,
     buffers,
     cameras,
@@ -38,4 +39,7 @@ api_router.include_router(
 )
 api_router.include_router(
     watchlist.router, prefix="", tags=["Real-Time Watchlist & Hotlist Matching Engine"]
+)
+api_router.include_router(
+    alerts.router, prefix="", tags=["Real-time WebSocket Alert Dispatcher & Notification Hub"]
 )

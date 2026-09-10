@@ -135,6 +135,12 @@ from app.schemas.watchlist import (
     WatchlistTelemetry,
     WatchlistUpdate,
 )
+from app.schemas.websocket import (
+    AlertBroadcastPayload,
+    WebSocketClientMessage,
+    WebSocketHubStats,
+    WebSocketMessageType,
+)
 
 __all__ = [
     "APIResponse",
@@ -240,4 +246,8 @@ __all__ = [
     "AlertResponse",
     "AlertAcknowledgeRequest",
     "WatchlistTelemetry",
+    "AlertBroadcastPayload",
+    "WebSocketClientMessage",
+    "WebSocketHubStats",
+    "WebSocketMessageType",
 ]

@@ -180,6 +180,39 @@ class WatchlistMatchingEngine:
             await db.commit()
             alert_generated = True
 
+            # Automatic Real-time WebSocket Broadcast (< 500ms SLA)
+            try:
+                from app.schemas.websocket import AlertBroadcastPayload
+                from app.services.alert_dispatcher import alert_dispatcher
+
+                visual_color = (
+                    "#ef4444"
+                    if matched_entry["priority"] == "CRITICAL"
+                    else "#f97316"
+                    if matched_entry["priority"] == "HIGH"
+                    else "#eab308"
+                )
+
+                payload = AlertBroadcastPayload(
+                    alert_id=alert_id,
+                    registration_number=matched_entry["registration_number"],
+                    category=matched_entry["category"],
+                    priority=matched_entry["priority"],
+                    camera_id=req.camera_id,
+                    camera_name=f"Camera {req.camera_id[:8]}",
+                    location_name=req.location_name or "Junction Checkpoint",
+                    latitude=23.0225,
+                    longitude=72.5714,
+                    snapshot_path=req.snapshot_path,
+                    alert_time=now_utc,
+                    audio_alert=matched_entry["priority"] in ["CRITICAL", "HIGH"],
+                    visual_color=visual_color,
+                    message=f"🚨 HOTLIST HIT: {matched_entry['category']} vehicle {matched_entry['registration_number']} detected!",
+                )
+                await alert_dispatcher.broadcast_alert(payload)
+            except Exception as e:
+                logger.warning(f"Failed to broadcast WebSocket alert: {e}")
+
         elapsed_ms = (time.perf_counter() - start_t) * 1000.0
 
         # Update Telemetry
