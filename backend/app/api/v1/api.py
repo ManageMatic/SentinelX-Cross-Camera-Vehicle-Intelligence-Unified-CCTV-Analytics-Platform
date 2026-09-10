@@ -15,6 +15,7 @@ from app.api.v1 import (
     streams,
     system,
     tracking,
+    watchlist,
 )
 from fastapi import APIRouter
 
@@ -34,4 +35,7 @@ api_router.include_router(search.router, prefix="", tags=["Sub-200ms Vehicle Sea
 api_router.include_router(correlation.router, prefix="", tags=["Cross-Camera Correlation Engine"])
 api_router.include_router(
     journey.router, prefix="", tags=["Chronological Journey & Route Timeline Reconstructor"]
+)
+api_router.include_router(
+    watchlist.router, prefix="", tags=["Real-Time Watchlist & Hotlist Matching Engine"]
 )
