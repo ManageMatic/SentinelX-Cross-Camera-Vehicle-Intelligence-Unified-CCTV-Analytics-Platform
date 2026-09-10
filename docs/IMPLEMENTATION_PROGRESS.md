@@ -995,6 +995,44 @@ This document tracks module-by-module implementation status, acceptance criteria
 - **Test Result**: PASS
 - **Next Module**: Module 27 — Vehicle Intelligence, Watchlists & Alert Triage UI (Frontend Track 8)
 
+---
+
+## Module 27 — Vehicle Intelligence, Watchlists & Alert Triage UI
+
+- **Status**: COMPLETE
+- **Implemented**:
+  - Upgraded `SearchPage` in `frontend/src/pages/SearchPage.tsx`:
+    - **Wildcard & Fuzzy Plate Search Engine**: Supports raw registration numbers, wildcard expressions (`GJ01*`, `*1234`, `GJ?5*`), and Levenshtein distance matching.
+    - **Multi-Parameter Filter Toolbar**: Filter by vehicle classification (Sedan, 2-Wheeler, Truck, Bus, Auto-rickshaw), classified color palette, district hubs, and sort order.
+    - **Single-Click CSV Intelligence Export**: Generates full forensic CSV summary of all filtered vehicle events.
+    - **Deep Forensic Sighting Inspection Modal**: Detailed modal showcasing camera snapshot, OCR confidence overlay, classified vehicle attributes, GPS coordinates, and Re-ID AI embedding status.
+  - Upgraded `WatchlistsPage` in `frontend/src/pages/WatchlistsPage.tsx`:
+    - **Statewide Hotlist & Watchlist Hub**: Interactive registry with Valkey in-memory lookup synchronization indicator (< 0.5ms lookup badge).
+    - **Category & Priority Triage**: Category filter tabs (`WANTED`, `STOLEN`, `SUSPICIOUS`, `VIP`) and priority severity badges (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`).
+    - **Interactive Add Hotlist Plate Modal**: Normalized plate registration entry with FIR case numbers, investigating officer assignments, and priority configuration.
+    - **1-Click Plate Activation Management**: Instant status toggle between active monitoring and deactivated state, plus delete actions.
+  - Upgraded `AlertsPage` in `frontend/src/pages/AlertsPage.tsx`:
+    - **Real-Time WebSocket Dispatch Hub**: Live dispatch header with active websocket status and siren audio simulation toggles.
+    - **KPI Severity Metric Cards**: Real-time counter cards for Critical Actions Required, Pending Officer Review, and Acknowledged Alerts.
+    - **Simulate Hotlist Ingest Hit**: Live test button simulating high-priority emergency incoming FIR alerts.
+    - **PCR Interceptor Dispatch Modal**: Transmits emergency intercept orders and GPS coordinates to nearest patrol unit / PCR van.
+    - **Audit-Trailed Alert Lifecycle**: Acknowledge, Mark Resolved, and False Positive triage workflows.
+  - Built unit test suite in `frontend/src/__tests__/VehicleIntelligence.test.tsx` testing ANPR search, wildcard filters, forensic modal inspection, watchlist creation, category filters, PCR van dispatch, and alert acknowledgement.
+- **Files Changed**:
+  - `frontend/src/pages/SearchPage.tsx`
+  - `frontend/src/pages/WatchlistsPage.tsx`
+  - `frontend/src/pages/AlertsPage.tsx`
+  - `frontend/src/__tests__/VehicleIntelligence.test.tsx`
+  - `frontend/src/__tests__/MapPage.test.tsx`
+  - `docs/IMPLEMENTATION_PROGRESS.md`
+- **Tests**:
+  - Frontend: `npm test` (25/25 passed across 4 test suites in 6.09s)
+  - Backend: `pytest backend/tests` (113/113 passed in 8.83s)
+  - Python Linter: `ruff check backend` (0 errors)
+- **Test Result**: PASS
+- **Next Module**: Module 28 — System Health, Forensic Vault & Compliance Audit UI (Frontend Track 9 — FINAL MODULE!)
+
+
 
 
 
