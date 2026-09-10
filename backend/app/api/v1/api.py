@@ -8,6 +8,7 @@ from app.api.v1 import (
     correlation,
     detection,
     events,
+    evidence,
     health,
     journey,
     proxy,
@@ -43,3 +44,7 @@ api_router.include_router(
 api_router.include_router(
     alerts.router, prefix="", tags=["Real-time WebSocket Alert Dispatcher & Notification Hub"]
 )
+api_router.include_router(
+    evidence.router, prefix="", tags=["Forensic Evidence Vault & Cryptographic Chain of Custody"]
+)
+

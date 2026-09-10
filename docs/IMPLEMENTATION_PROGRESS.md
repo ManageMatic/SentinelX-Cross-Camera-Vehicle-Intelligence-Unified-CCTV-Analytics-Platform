@@ -733,6 +733,48 @@ This document tracks module-by-module implementation status, acceptance criteria
 - **Test Result**: PASS
 - **Next Module**: Module 20 — Forensic Evidence Vault & Cryptographic SHA-256 Chain of Custody
 
+---
+
+## Module 20 — Forensic Evidence Vault & Cryptographic SHA-256 Chain of Custody
+
+- **Status**: COMPLETE
+- **Implemented**:
+  - Implemented `EvidenceType`, `IntegrityStatus`, `EvidenceArchiveRequest`, `EvidenceResponse`, `EvidenceListResponse`, `EvidenceVerifyResult`, `BatchVerifyResult`, `ForensicWatermarkRequest`, `ForensicWatermarkResponse`, `Section65BCertificate`, `CourtroomExportPackage`, and `EvidenceTelemetry` in `backend/app/schemas/evidence.py`.
+  - Built `EvidenceVaultService` in `backend/app/services/evidence_vault.py`:
+    - **Cryptographic SHA-256 Chain of Custody**: Computes cryptographic 256-bit hashes upon evidence capture and stores deterministic path hierarchies (`data/evidence/snapshots/YYYY/MM/DD/...`).
+    - **Live Tamper Detection & Verification**: Re-reads physical bytes from disk and compares against recorded database hash. Flags `VERIFIED_MATCH` or `TAMPER_DETECTED` with sub-millisecond computation latency.
+    - **Forensic Legal Metadata Watermarking**: High-contrast, semi-transparent top/bottom banners embedding Camera ID, dual UTC & IST timestamps, GPS coordinates, Case/FIR reference, Officer badge ID, and cryptographic SHA-256 prefix for courtroom tamper resistance.
+    - **Section 65B Indian Evidence Act Certificate**: Auto-generates electronic record certificates with legal declarations of authenticity, hardware custody, and digital hash verification under Section 65B Indian Evidence Act / Section 63 Bharatiya Sakshya Adhiniyam.
+    - **Courtroom Dossier Export Package**: Assembles bundled evidence items, Section 65B certificates, and combined manifest SHA-256 checksums.
+    - **Storage & Integrity Telemetry**: Live metrics on total archived evidence, physical storage bytes, tamper violations detected, and mean verification latency.
+  - Implemented REST API routes in `backend/app/api/v1/evidence.py`:
+    - `POST /api/v1/evidence/archive`: Ingest & cryptographically archive snapshot or plate crop.
+    - `GET /api/v1/evidence`: Query and list archived evidence records with filters.
+    - `GET /api/v1/evidence/{evidence_id}`: Fetch evidence details.
+    - `GET /api/v1/evidence/{evidence_id}/download`: Download raw evidence or watermarked copy with `X-Evidence-SHA256` headers.
+    - `POST /api/v1/evidence/{evidence_id}/verify`: Live single-item cryptographic SHA-256 verification.
+    - `POST /api/v1/evidence/verify-batch`: Batch integrity audit across multiple evidence items.
+    - `POST /api/v1/evidence/{evidence_id}/watermark`: Generate stamped legal watermark copy.
+    - `POST /api/v1/evidence/{evidence_id}/section-65b`: Generate Section 65B legal certificate.
+    - `POST /api/v1/evidence/courtroom-package`: Generate complete courtroom dossier manifest.
+    - `GET /api/v1/evidence/telemetry`: Retrieve storage and integrity telemetry stats.
+  - Built unit test suite in `backend/tests/unit/test_evidence_vault.py` testing SHA-256 calculation, atomic disk persistence, verification matching, tamper detection upon physical byte alteration, missing file handling, watermarking, Section 65B certificate generation, and REST API endpoints.
+- **Files Changed**:
+  - `backend/app/schemas/evidence.py`
+  - `backend/app/schemas/__init__.py`
+  - `backend/app/services/evidence_vault.py`
+  - `backend/app/api/v1/evidence.py`
+  - `backend/app/api/v1/api.py`
+  - `backend/tests/unit/test_evidence_vault.py`
+  - `docs/IMPLEMENTATION_PROGRESS.md`
+- **Tests**:
+  - Backend: `pytest backend/tests` (94/94 passed in 7.25s)
+  - Python Linter: `ruff check backend` (0 errors)
+  - Frontend: `npm run test` (4/4 passed in 2.37s)
+- **Test Result**: PASS
+- **Next Module**: Module 21 — Append-Only Immutable Audit Logging Engine
+
+
 
 
 

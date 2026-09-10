@@ -62,6 +62,20 @@ from app.schemas.events import (
     VehicleEventResponse,
     VehiclePlateResponse,
 )
+from app.schemas.evidence import (
+    BatchVerifyResult,
+    CourtroomExportPackage,
+    EvidenceArchiveRequest,
+    EvidenceListResponse,
+    EvidenceResponse,
+    EvidenceTelemetry,
+    EvidenceType,
+    EvidenceVerifyResult,
+    ForensicWatermarkRequest,
+    ForensicWatermarkResponse,
+    IntegrityStatus,
+    Section65BCertificate,
+)
 from app.schemas.journey import (
     BehaviorPattern,
     JourneyReconstructRequest,
@@ -250,4 +264,17 @@ __all__ = [
     "WebSocketClientMessage",
     "WebSocketHubStats",
     "WebSocketMessageType",
+    "EvidenceType",
+    "IntegrityStatus",
+    "EvidenceArchiveRequest",
+    "EvidenceResponse",
+    "EvidenceListResponse",
+    "EvidenceVerifyResult",
+    "BatchVerifyResult",
+    "ForensicWatermarkRequest",
+    "ForensicWatermarkResponse",
+    "Section65BCertificate",
+    "CourtroomExportPackage",
+    "EvidenceTelemetry",
 ]
+
