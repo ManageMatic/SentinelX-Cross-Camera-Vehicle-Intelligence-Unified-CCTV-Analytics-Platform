@@ -6,7 +6,9 @@ from app.core.exceptions import ResourceNotFoundException
 from app.db.session import get_db
 from app.models.camera import Camera
 from app.schemas.common import APIResponse
+from app.schemas.resilience import StreamHealthSummary, StreamWatchdogRecord
 from app.schemas.stream import StreamPoolStatus, StreamWorkerStats
+from app.services.stream_manager import stream_manager
 from app.services.stream_worker import stream_pool
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy import select
@@ -31,6 +33,21 @@ async def get_stream_pool_status():
 
 
 @router.get(
+    "/health",
+    response_model=APIResponse[StreamHealthSummary],
+    summary="Get stream watchdog health metrics and circuit breaker states",
+)
+async def get_stream_health_summary():
+    """Retrieve watchdog health telemetry, stall detections, and circuit breaker states across all cameras."""
+    health_summary = stream_manager.get_health_summary()
+    return APIResponse(
+        success=True,
+        message="Stream health summary retrieved successfully",
+        data=health_summary,
+    )
+
+
+@router.get(
     "/{camera_id}/stats",
     response_model=APIResponse[StreamWorkerStats],
     summary="Get real-time worker metrics for a specific camera feed",
@@ -45,6 +62,21 @@ async def get_stream_worker_stats(camera_id: str):
         success=True,
         message="Camera stream telemetry retrieved successfully",
         data=worker.get_stats(),
+    )
+
+
+@router.get(
+    "/{camera_id}/health",
+    response_model=APIResponse[StreamWatchdogRecord],
+    summary="Get watchdog record and circuit breaker state for a specific camera",
+)
+async def get_camera_watchdog_health(camera_id: str):
+    """Inspect camera stream stall status, consecutive failures, and backoff timers."""
+    record = stream_manager.check_camera_health(camera_id)
+    return APIResponse(
+        success=True,
+        message="Camera watchdog record retrieved successfully",
+        data=record,
     )
 
 
@@ -106,4 +138,34 @@ async def stop_stream_worker(camera_id: str):
         success=True,
         message=f"Stream ingestion worker stopped for camera '{camera_id}'",
         data={"camera_id": camera_id, "stopped": True},
+    )
+
+
+@router.post(
+    "/{camera_id}/reconnect",
+    response_model=APIResponse[StreamWatchdogRecord],
+    summary="Force immediate reconnect attempt for a camera stream",
+)
+async def force_reconnect_stream(camera_id: str):
+    """Bypasses backoff timer and immediately triggers reconnection for a camera."""
+    record = stream_manager.force_reconnect(camera_id)
+    return APIResponse(
+        success=True,
+        message=f"Immediate reconnection triggered for camera '{camera_id}'",
+        data=record,
+    )
+
+
+@router.post(
+    "/{camera_id}/reset-circuit",
+    response_model=APIResponse[StreamWatchdogRecord],
+    summary="Reset circuit breaker state back to CLOSED",
+)
+async def reset_camera_circuit_breaker(camera_id: str):
+    """Manually resets circuit breaker back to CLOSED state."""
+    record = stream_manager.reset_circuit(camera_id)
+    return APIResponse(
+        success=True,
+        message=f"Circuit breaker reset to CLOSED for camera '{camera_id}'",
+        data=record,
     )

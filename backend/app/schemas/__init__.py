@@ -19,6 +19,11 @@ from app.schemas.common import (
     PaginationParams,
     utc_now_iso,
 )
+from app.schemas.resilience import (
+    CircuitBreakerState,
+    StreamHealthSummary,
+    StreamWatchdogRecord,
+)
 from app.schemas.stream import (
     StreamPoolStatus,
     StreamWorkerState,
@@ -56,4 +61,7 @@ __all__ = [
     "StreamWorkerState",
     "StreamWorkerStats",
     "StreamPoolStatus",
+    "CircuitBreakerState",
+    "StreamWatchdogRecord",
+    "StreamHealthSummary",
 ]

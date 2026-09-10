@@ -267,7 +267,38 @@ This document tracks module-by-module implementation status, acceptance criteria
   - Frontend: `npm run test` (4/4 passed in 2.37s)
 - **Test Result**: PASS
 - **Known Issues**: None.
-- **Next Module**: Module 7 — Resilient Stream Manager & Auto-Reconnect Engine
+## Module 7 — Resilient Stream Manager & Auto-Reconnect Engine
+
+- **Status**: COMPLETE
+- **Implemented**:
+  - Implemented `CircuitBreakerState` (`CLOSED`, `OPEN`, `HALF_OPEN`), `StreamWatchdogRecord`, and `StreamHealthSummary` in `backend/app/schemas/resilience.py`.
+  - Built `StreamWatchdogManager` in `backend/app/services/stream_manager.py` with:
+    - 24/7 stream stall detection (triggers if no new video frames arrive within 5.0 seconds).
+    - Exponential backoff calculation with random jitter (1.0s -> 30.0s max) to prevent thundering herd camera reconnection.
+    - Circuit breaker pattern (automatically trips `OPEN` after 5 consecutive failures, enters `HALF_OPEN` health probe after 30s cooldown).
+    - Database health synchronization writing `CameraHealth` latency/FPS records and updating `Camera.live_status`.
+    - Manual administrative overrides (`force_reconnect`, `reset_circuit`).
+  - Extended RESTful endpoints in `backend/app/api/v1/streams.py`:
+    - `GET /api/v1/streams/health`: Aggregate watchdog health summary and circuit breaker status across all cameras.
+    - `GET /api/v1/streams/{camera_id}/health`: Detailed watchdog status for a specific camera.
+    - `POST /api/v1/streams/{camera_id}/reconnect`: Force immediate reconnection bypassing backoff delays.
+    - `POST /api/v1/streams/{camera_id}/reset-circuit`: Reset tripped circuit breaker back to `CLOSED`.
+  - Built comprehensive automated unit test suite in `backend/tests/unit/test_stream_manager.py` testing backoff math, circuit breaker transitions, DB synchronization, and REST API routes.
+- **Files Changed**:
+  - `backend/app/schemas/resilience.py`
+  - `backend/app/schemas/__init__.py`
+  - `backend/app/services/stream_manager.py`
+  - `backend/app/api/v1/streams.py`
+  - `backend/tests/unit/test_stream_manager.py`
+  - `docs/IMPLEMENTATION_PROGRESS.md`
+- **Tests**:
+  - Backend: `pytest backend/tests` (30/30 passed in 1.82s)
+  - Python Linter: `ruff check backend` (0 errors)
+  - Frontend: `npm run test` (4/4 passed in 2.40s)
+- **Test Result**: PASS
+- **Known Issues**: None.
+- **Next Module**: Module 8 — Low-Latency WebRTC (WHEP) & HLS Proxy
+
 
 
 
