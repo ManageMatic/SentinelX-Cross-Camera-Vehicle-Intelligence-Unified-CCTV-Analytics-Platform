@@ -40,6 +40,16 @@ from app.schemas.buffer import (
     CameraBufferStats,
     FrameDropStrategy,
 )
+from app.schemas.cache import (
+    CacheEntryResponse,
+    CacheGetRequest,
+    CacheSetRequest,
+    CacheStatsResponse,
+    CameraStatusCacheItem,
+    HotlistCacheSyncResult,
+    PubSubPublishRequest,
+    PubSubPublishResponse,
+)
 from app.schemas.camera import (
     CameraBase,
     CameraCreate,
@@ -324,5 +334,14 @@ __all__ = [
     "RoleResponse",
     "RoleListResponse",
     "AuthTelemetry",
+    "CacheGetRequest",
+    "CacheSetRequest",
+    "CacheEntryResponse",
+    "CacheStatsResponse",
+    "PubSubPublishRequest",
+    "PubSubPublishResponse",
+    "HotlistCacheSyncResult",
+    "CameraStatusCacheItem",
 ]
+
 

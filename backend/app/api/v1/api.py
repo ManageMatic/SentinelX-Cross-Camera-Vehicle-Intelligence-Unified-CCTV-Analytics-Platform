@@ -6,6 +6,7 @@ from app.api.v1 import (
     audit,
     auth,
     buffers,
+    cache,
     cameras,
     correlation,
     detection,
@@ -53,3 +54,7 @@ api_router.include_router(
 api_router.include_router(
     audit.router, prefix="", tags=["Append-Only Immutable Audit Trail"]
 )
+api_router.include_router(
+    cache.router, prefix="", tags=["Valkey In-Memory Cache & Broker"]
+)
+
