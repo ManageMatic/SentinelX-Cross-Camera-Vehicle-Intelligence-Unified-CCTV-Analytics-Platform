@@ -19,6 +19,20 @@ from app.schemas.audit import (
     AuditStatus,
     AuditTelemetry,
 )
+from app.schemas.auth import (
+    AuthTelemetry,
+    ChangePasswordRequest,
+    PermissionResponse,
+    RefreshTokenRequest,
+    RoleListResponse,
+    RoleResponse,
+    TokenResponse,
+    UserCreate,
+    UserListResponse,
+    UserLoginRequest,
+    UserProfileResponse,
+    UserUpdate,
+)
 from app.schemas.buffer import (
     BackpressureLevel,
     BufferConfig,
@@ -298,4 +312,17 @@ __all__ = [
     "AuditExportResponse",
     "AuditChainVerification",
     "AuditTelemetry",
+    "UserLoginRequest",
+    "UserProfileResponse",
+    "TokenResponse",
+    "RefreshTokenRequest",
+    "ChangePasswordRequest",
+    "UserCreate",
+    "UserUpdate",
+    "UserListResponse",
+    "PermissionResponse",
+    "RoleResponse",
+    "RoleListResponse",
+    "AuthTelemetry",
 ]
+

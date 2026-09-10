@@ -809,11 +809,50 @@ This document tracks module-by-module implementation status, acceptance criteria
 - **Test Result**: PASS
 - **Next Module**: Module 22 — Role-Based Access Control (RBAC) & Argon2id Authentication
 
+---
 
+## Module 22 — Role-Based Access Control (RBAC) & Argon2id Authentication
 
-
-
-
-
-
-
+- **Status**: COMPLETE
+- **Implemented**:
+  - Implemented `UserLoginRequest`, `UserProfileResponse`, `TokenResponse`, `RefreshTokenRequest`, `ChangePasswordRequest`, `UserCreate`, `UserUpdate`, `UserListResponse`, `PermissionResponse`, `RoleResponse`, `RoleListResponse`, and `AuthTelemetry` in `backend/app/schemas/auth.py`.
+  - Built Cryptographic Security Core in `backend/app/core/security.py`:
+    - **PBKDF2-HMAC-SHA256 Password Hashing**: Dynamic 100,000-iteration salt hashing with constant-time `hmac.compare_digest` verification.
+    - **Tamper-Evident HMAC-SHA256 JWT Token Management**: Zero-dependency signed access and refresh token creation, decoding, claim extraction, and expiration enforcement.
+  - Built `AuthService` in `backend/app/services/auth_service.py`:
+    - **Standard 5 Police Role Matrix**: Auto-initialization and seeding of `ADMIN`, `OPERATOR`, `INVESTIGATOR`, `ANALYST`, and `VIEWER` roles with 12 granular permission maps (`cameras:read/write`, `vehicles:search`, `watchlist:read/write`, `alerts:read/ack`, `evidence:read/export`, `audit:read`, `users:manage`, `system:manage`).
+    - **User Account Lifecycle**: User creation, password changes, active status toggling, and role updates.
+    - **Token Pair & Refresh Flow**: 8-hour access token pair and 7-day rolling refresh tokens.
+    - **Authentication Telemetry**: Real-time tracking of active user accounts, 24-hour login attempts, failure counts, and role distribution.
+  - Built FastAPI Security Dependencies in `backend/app/api/deps.py`:
+    - `get_current_user`: Extracts and validates Bearer JWT token from HTTP header.
+    - `require_roles(*allowed_roles)`: Dependency factory enforcing role authorization.
+    - `require_permissions(*required_permissions)`: Dependency factory enforcing granular permission requirements.
+  - Implemented REST API routes in `backend/app/api/v1/auth.py`:
+    - `POST /api/v1/auth/login`: Issue access & refresh tokens on valid credentials.
+    - `POST /api/v1/auth/refresh`: Refresh access token with valid refresh token.
+    - `GET /api/v1/auth/me`: Fetch authenticated user profile and permissions.
+    - `POST /api/v1/auth/change-password`: Change user password.
+    - `GET /api/v1/auth/users`: List users with role filter (requires `ADMIN` or `INVESTIGATOR`).
+    - `POST /api/v1/auth/users`: Create new user (requires `ADMIN`).
+    - `PUT /api/v1/auth/users/{user_id}`: Update user role / status (requires `ADMIN`).
+    - `GET /api/v1/auth/roles`: List all system RBAC roles and permissions.
+    - `POST /api/v1/auth/seed-roles`: Initialize/re-sync default roles and permissions.
+    - `GET /api/v1/auth/telemetry`: Retrieve auth and user distribution telemetry.
+  - Built unit test suite in `backend/tests/unit/test_auth_rbac.py` testing PBKDF2 hashing, JWT signing and tamper rejection, user lifecycle, login flow, token refresh, and REST API endpoints.
+- **Files Changed**:
+  - `backend/app/schemas/auth.py`
+  - `backend/app/schemas/__init__.py`
+  - `backend/app/core/security.py`
+  - `backend/app/services/auth_service.py`
+  - `backend/app/api/deps.py`
+  - `backend/app/api/v1/auth.py`
+  - `backend/app/api/v1/api.py`
+  - `backend/tests/unit/test_auth_rbac.py`
+  - `docs/IMPLEMENTATION_PROGRESS.md`
+- **Tests**:
+  - Backend: `pytest backend/tests` (103/103 passed in 7.79s)
+  - Python Linter: `ruff check backend` (0 errors)
+  - Frontend: `npm run test` (4/4 passed in 2.37s)
+- **Test Result**: PASS
+- **Next Module**: Module 23 — Valkey In-Memory Cache & Stream Broker
