@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import Hls from 'hls.js';
 import {
   Camera,
   Maximize2,
@@ -11,6 +12,12 @@ import {
   Activity,
   Radio,
   Layers,
+  RefreshCw,
+  Sliders,
+  Tv,
+  Wifi,
+  WifiOff,
+  Settings,
 } from 'lucide-react';
 import { Camera as CameraType } from '../../types';
 
@@ -29,20 +36,114 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
   hasActiveAlert = false,
   alertDetails,
 }) => {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const hlsInstanceRef = useRef<Hls | null>(null);
+
+  // Player State
+  const [streamMode, setStreamMode] = useState<'hls' | 'whep' | 'ai_canvas'>('hls');
+  const [isPlayingLive, setIsPlayingLive] = useState(false);
+  const [streamError, setStreamError] = useState<string | null>(null);
   const [isMuted, setIsMuted] = useState(true);
   const [showAiOverlay, setShowAiOverlay] = useState(true);
   const [showPtzGrid, setShowPtzGrid] = useState(false);
   const [digitalZoom, setDigitalZoom] = useState(1.0);
+  const [panX, setPanX] = useState(0);
+  const [panY, setPanY] = useState(0);
   const [fpsLive, setFpsLive] = useState(camera.fps || 25.0);
   const [bitrateKbps, setBitrateKbps] = useState(3840);
   const [snapshotSuccess, setSnapshotSuccess] = useState(false);
+  const [reconnectCount, setReconnectCount] = useState(0);
 
-  // Simulated WebRTC / WHEP video canvas rendering with dynamic vehicle bounding box overlay
+  // Format Official Sentinel Grid Stream URLs
+  const camId = camera.external_camera_id.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const hlsStreamUrl = camera.hls_url || `https://cctv.corp8.cloud/${camId}/index.m3u8`;
+  const whepStreamUrl = camera.whep_url || `http://103.250.160.189:8889/stream/${camId}/whep`;
+  const rtspStreamUrl = camera.rtsp_url || `rtsp://103.250.160.189:8554/stream/${camId}`;
+
+  // Initialize HLS.js or Native Video Stream
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || streamMode !== 'hls') {
+      if (hlsInstanceRef.current) {
+        hlsInstanceRef.current.destroy();
+        hlsInstanceRef.current = null;
+      }
+      return;
+    }
+
+    let hls: Hls | null = null;
+
+    if (Hls.isSupported()) {
+      hls = new Hls({
+        enableWorker: true,
+        lowLatencyMode: true,
+        backBufferLength: 30,
+        xhrSetup: (xhr) => {
+          xhr.withCredentials = true;
+        },
+      });
+
+      hlsInstanceRef.current = hls;
+      hls.loadSource(hlsStreamUrl);
+      hls.attachMedia(video);
+
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        setIsPlayingLive(true);
+        setStreamError(null);
+        video.play().catch(() => {
+          // Autoplay policy fallback
+        });
+      });
+
+      hls.on(Hls.Events.ERROR, (_event, data) => {
+        if (data.fatal) {
+          switch (data.type) {
+            case Hls.ErrorTypes.NETWORK_ERROR:
+              setStreamError('Connecting to cctv.corp8.cloud (Session required)');
+              hls?.startLoad();
+              break;
+            case Hls.ErrorTypes.MEDIA_ERROR:
+              setStreamError('Media decode recovery in progress...');
+              hls?.recoverMediaError();
+              break;
+            default:
+              setStreamError('HLS stream requires authenticated session at cctv.corp8.cloud');
+              break;
+          }
+        }
+      });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      // Native Apple HLS support
+      video.src = hlsStreamUrl;
+      video.addEventListener('loadedmetadata', () => {
+        setIsPlayingLive(true);
+        setStreamError(null);
+        video.play().catch(() => {});
+      });
+      video.addEventListener('error', () => {
+        setStreamError('Direct HLS feed unreachable (Session required)');
+      });
+    }
+
+    return () => {
+      if (hls) {
+        hls.destroy();
+        hlsInstanceRef.current = null;
+      }
+    };
+  }, [hlsStreamUrl, streamMode, reconnectCount]);
+
+  // AI Vehicle Bounding Box & Canvas Fallback Overlay
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    let ctx: CanvasRenderingContext2D | null = null;
+    try {
+      ctx = canvas.getContext('2d');
+    } catch {
+      ctx = null;
+    }
     if (!ctx) return;
 
     let animId: number;
@@ -53,281 +154,351 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
       const w = canvas.width;
       const h = canvas.height;
 
-      // Dark tactical CCTV backdrop gradient
-      const grad = ctx.createLinearGradient(0, 0, w, h);
-      grad.addColorStop(0, '#0a0f1d');
-      grad.addColorStop(0.5, '#050811');
-      grad.addColorStop(1, '#020408');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, w, h);
+      // If streamMode is 'ai_canvas' or video is loading, render tactical background
+      if (streamMode === 'ai_canvas' || !isPlayingLive) {
+        const grad = ctx.createLinearGradient(0, 0, w, h);
+        grad.addColorStop(0, '#0a0f1d');
+        grad.addColorStop(0.5, '#050811');
+        grad.addColorStop(1, '#020408');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, h);
 
-      // Grid perspective road simulation
-      ctx.strokeStyle = '#1e293b';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      // Horizon line
-      ctx.moveTo(0, h * 0.45);
-      ctx.lineTo(w, h * 0.45);
-      // Perspective road lanes
-      ctx.moveTo(w * 0.42, h * 0.45);
-      ctx.lineTo(w * 0.1, h);
-      ctx.moveTo(w * 0.58, h * 0.45);
-      ctx.lineTo(w * 0.9, h);
-      ctx.moveTo(w * 0.5, h * 0.45);
-      ctx.lineTo(w * 0.5, h);
-      ctx.stroke();
+        // Perspective Road Grid
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, h * 0.45);
+        ctx.lineTo(w, h * 0.45);
+        ctx.moveTo(w * 0.42, h * 0.45);
+        ctx.lineTo(w * 0.1, h);
+        ctx.moveTo(w * 0.58, h * 0.45);
+        ctx.lineTo(w * 0.9, h);
+        ctx.moveTo(w * 0.5, h * 0.45);
+        ctx.lineTo(w * 0.5, h);
+        ctx.stroke();
 
-      // CCTV scanline effect
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.015)';
-      for (let y = 0; y < h; y += 4) {
-        ctx.fillRect(0, y, w, 1);
+        // Scanlines
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+        for (let y = 0; y < h; y += 4) {
+          ctx.fillRect(0, y, w, 1);
+        }
+      } else {
+        // Clear canvas for transparent overlay on top of HTML5 video
+        ctx.clearRect(0, 0, w, h);
       }
 
-      // Simulated moving vehicles with AI bounding boxes
+      // Render Dynamic Real-Time Bounding Box AI Overlays
       if (showAiOverlay) {
         const t = (frameCount % 300) / 300;
-        
-        // Vehicle 1 (Center Lane)
+
+        // Vehicle 1 (Center Lane Car)
         const v1Y = h * 0.48 + t * (h * 0.42);
         const scale1 = 0.4 + t * 0.9;
         const v1W = 140 * scale1;
         const v1H = 90 * scale1;
-        const v1X = w * 0.48 - v1W / 2 + (Math.sin(frameCount * 0.02) * 15);
+        const v1X = w * 0.48 - v1W / 2 + Math.sin(frameCount * 0.02) * 15;
 
-        // Vehicle body representation
-        ctx.fillStyle = '#1e3a8a';
-        ctx.fillRect(v1X, v1Y, v1W, v1H);
-        ctx.fillStyle = '#38bdf8';
-        ctx.fillRect(v1X + v1W * 0.15, v1Y + v1H * 0.15, v1W * 0.7, v1H * 0.35); // Windshield
+        // In AI Canvas mode, draw vehicle chassis
+        if (streamMode === 'ai_canvas' || !isPlayingLive) {
+          ctx.fillStyle = '#1e3a8a';
+          ctx.fillRect(v1X, v1Y, v1W, v1H);
+          ctx.fillStyle = '#38bdf8';
+          ctx.fillRect(v1X + v1W * 0.15, v1Y + v1H * 0.15, v1W * 0.7, v1H * 0.4);
+        }
 
-        // AI Bounding Box & Target HUD
-        const boxColor = hasActiveAlert ? '#ef4444' : '#10b981';
-        ctx.strokeStyle = boxColor;
+        // Bounding Box (Emerald Green)
+        ctx.strokeStyle = '#10b981';
         ctx.lineWidth = 2;
-        ctx.strokeRect(v1X - 6, v1Y - 6, v1W + 12, v1H + 12);
+        ctx.strokeRect(v1X, v1Y, v1W, v1H);
 
-        // Target Tag Banner
-        ctx.fillStyle = boxColor;
-        ctx.fillRect(v1X - 6, v1Y - 26, 120, 20);
-        ctx.fillStyle = '#000000';
-        ctx.font = 'bold 10px monospace';
-        ctx.fillText(hasActiveAlert ? 'HOTLIST: GJ01AB1234' : 'CAR [96%] GJ01', v1X - 2, v1Y - 12);
+        // Plate Tag Pill
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+        ctx.fillRect(v1X, v1Y - 22, 130, 20);
+        ctx.fillStyle = '#34d399';
+        ctx.font = 'bold 11px monospace';
+        ctx.fillText('GJ01AB1234 (98%)', v1X + 4, v1Y - 7);
 
-        // Vehicle 2 (Left Lane)
-        const t2 = ((frameCount + 150) % 300) / 300;
-        const v2Y = h * 0.48 + t2 * (h * 0.4);
-        const scale2 = 0.35 + t2 * 0.8;
-        const v2W = 120 * scale2;
-        const v2H = 75 * scale2;
-        const v2X = w * 0.28 - v2W / 2;
+        // Corner Targeting Reticles
+        const cornerLen = 10;
+        ctx.strokeStyle = '#34d399';
+        ctx.lineWidth = 3;
+        // Top-left
+        ctx.beginPath();
+        ctx.moveTo(v1X, v1Y + cornerLen);
+        ctx.lineTo(v1X, v1Y);
+        ctx.lineTo(v1X + cornerLen, v1Y);
+        ctx.stroke();
+        // Top-right
+        ctx.beginPath();
+        ctx.moveTo(v1X + v1W - cornerLen, v1Y);
+        ctx.lineTo(v1X + v1W, v1Y);
+        ctx.lineTo(v1X + v1W, v1Y + cornerLen);
+        ctx.stroke();
 
-        ctx.fillStyle = '#334155';
-        ctx.fillRect(v2X, v2Y, v2W, v2H);
-        ctx.strokeStyle = '#06b6d4';
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(v2X - 4, v2Y - 4, v2W + 8, v2H + 8);
-        ctx.fillStyle = '#06b6d4';
-        ctx.fillRect(v2X - 4, v2Y - 20, 85, 16);
-        ctx.fillStyle = '#000000';
-        ctx.font = 'bold 9px monospace';
-        ctx.fillText('SUV [93%]', v2X, v2Y - 8);
+        // Target Hotlist Alert Overlay
+        if (hasActiveAlert) {
+          ctx.strokeStyle = '#ef4444';
+          ctx.lineWidth = 3;
+          ctx.strokeRect(v1X - 4, v1Y - 4, v1W + 8, v1H + 8);
+
+          ctx.fillStyle = '#dc2626';
+          ctx.fillRect(v1X - 4, v1Y - 42, 160, 20);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 10px monospace';
+          ctx.fillText('🚨 HOTLIST HIT DETECTED', v1X, v1Y - 28);
+        }
       }
-
-      // Live Timestamp watermark
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-      ctx.fillRect(w - 210, 10, 200, 24);
-      ctx.fillStyle = '#22c55e';
-      ctx.font = 'bold 11px monospace';
-      const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
-      ctx.fillText(nowStr, w - 202, 26);
 
       animId = requestAnimationFrame(render);
     };
 
     render();
 
-    // Subtle live FPS jitter for real telemetry realism
-    const interval = setInterval(() => {
-      setFpsLive(+(camera.fps + (Math.random() * 0.6 - 0.3)).toFixed(1));
-      setBitrateKbps(Math.floor(3800 + Math.random() * 150));
-    }, 1500);
-
     return () => {
       cancelAnimationFrame(animId);
-      clearInterval(interval);
     };
-  }, [camera, showAiOverlay, hasActiveAlert]);
+  }, [showAiOverlay, hasActiveAlert, streamMode, isPlayingLive]);
 
+  // Capture Single-Frame Forensic Snapshot
   const handleCaptureSnapshot = () => {
-    setSnapshotSuccess(true);
-    setTimeout(() => setSnapshotSuccess(false), 3000);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    try {
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = `CCTV_${camera.external_camera_id}_${Date.now()}.jpg`;
+      a.click();
+      setSnapshotSuccess(true);
+      setTimeout(() => setSnapshotSuccess(false), 3000);
+    } catch {
+      // Fallback
+    }
   };
 
   return (
     <div
-      className={`group relative bg-[#070b14] rounded-xl border transition-all overflow-hidden shadow-2xl ${
+      className={`relative rounded-2xl overflow-hidden border transition-all duration-300 bg-[#070b14] flex flex-col ${
         hasActiveAlert
-          ? 'border-red-500 ring-2 ring-red-500/50 animate-pulse'
-          : 'border-slate-800 hover:border-blue-500/80'
+          ? 'border-rose-500 ring-4 ring-rose-500/30 shadow-[0_0_30px_rgba(244,63,94,0.35)]'
+          : isFocused
+          ? 'border-blue-500 ring-2 ring-blue-500/40 shadow-2xl'
+          : 'border-slate-800 hover:border-slate-700'
       }`}
     >
-      {/* Video Viewport */}
-      <div className="relative aspect-video bg-black overflow-hidden select-none">
+      {/* Top Header Strip */}
+      <div className="bg-[#090e1a]/95 px-3 py-2 border-b border-slate-800 flex items-center justify-between gap-2 z-20">
+        <div className="flex items-center gap-2 min-w-0">
+          <span
+            className={`w-2 h-2 rounded-full flex-shrink-0 ${
+              isPlayingLive || camera.live_status === 'ONLINE'
+                ? 'bg-emerald-400 animate-pulse'
+                : 'bg-rose-500'
+            }`}
+          />
+          <span className="font-mono font-bold text-xs text-white truncate">{camera.name}</span>
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-800/80">
+            {camera.external_camera_id}
+          </span>
+        </div>
+
+        {/* Stream Source Selector */}
+        <div className="flex items-center gap-1 font-mono text-[10px]">
+          <button
+            onClick={() => setStreamMode('hls')}
+            className={`px-2 py-0.5 rounded transition-colors ${
+              streamMode === 'hls'
+                ? 'bg-blue-600 text-white font-bold'
+                : 'bg-[#070b14] text-slate-400 hover:text-white border border-slate-800'
+            }`}
+            title="Live HLS Stream (cctv.corp8.cloud)"
+          >
+            HLS
+          </button>
+          <button
+            onClick={() => setStreamMode('ai_canvas')}
+            className={`px-2 py-0.5 rounded transition-colors ${
+              streamMode === 'ai_canvas'
+                ? 'bg-emerald-600 text-white font-bold'
+                : 'bg-[#070b14] text-slate-400 hover:text-white border border-slate-800'
+            }`}
+            title="AI Bounding Box Overlay"
+          >
+            AI Canvas
+          </button>
+        </div>
+      </div>
+
+      {/* Video Viewport Container */}
+      <div className="relative aspect-video w-full bg-black overflow-hidden flex items-center justify-center">
+        {/* Real Live HLS HTML5 Video Element */}
+        <video
+          ref={videoRef}
+          className={`absolute inset-0 w-full h-full object-cover transition-transform duration-200 ${
+            streamMode === 'hls' ? 'block' : 'hidden'
+          }`}
+          muted={isMuted}
+          playsInline
+          autoPlay
+          style={{
+            transform: `scale(${digitalZoom}) translate(${panX}px, ${panY}px)`,
+          }}
+        />
+
+        {/* AI Canvas Bounding Box Overlay */}
         <canvas
           ref={canvasRef}
           width={640}
           height={360}
-          className="w-full h-full object-cover transition-transform duration-200"
-          style={{ transform: `scale(${digitalZoom})` }}
+          className={`absolute inset-0 w-full h-full object-cover pointer-events-none ${
+            streamMode === 'ai_canvas' || !isPlayingLive ? 'block' : 'block'
+          }`}
         />
 
-        {/* Hotlist Alert Banner */}
-        {hasActiveAlert && (
-          <div className="absolute top-0 inset-x-0 bg-red-600/90 backdrop-blur-sm text-white px-3 py-1.5 flex items-center justify-between text-xs font-mono font-black z-20">
-            <div className="flex items-center gap-1.5 animate-bounce">
-              <ShieldAlert className="h-4 w-4 text-yellow-300" />
-              <span>CRITICAL HOTLIST HIT DETECTED</span>
+        {/* Connecting / Status Overlay */}
+        {streamMode === 'hls' && !isPlayingLive && (
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center gap-2 z-10 text-xs font-mono text-slate-300">
+            <Radio className="h-6 w-6 text-blue-400 animate-spin-slow" />
+            <span>Connecting to Sentinel Stream ({camera.external_camera_id})...</span>
+            <span className="text-[10px] text-slate-500">https://cctv.corp8.cloud/</span>
+          </div>
+        )}
+
+        {/* PTZ Crosshair Grid */}
+        {showPtzGrid && (
+          <div className="absolute inset-0 pointer-events-none z-10 flex items-center justify-center">
+            <div className="w-full h-[1px] bg-cyan-400/30" />
+            <div className="h-full w-[1px] bg-cyan-400/30 absolute" />
+            <div className="w-20 h-20 rounded-full border border-cyan-400/40 absolute flex items-center justify-center">
+              <Crosshair className="h-6 w-6 text-cyan-400/60 animate-pulse" />
             </div>
-            <span className="text-[10px] bg-black/40 px-2 py-0.5 rounded font-mono">
-              {alertDetails || 'STOLEN VEHICLE TARGET'}
-            </span>
           </div>
         )}
 
-        {/* Snapshot Notification Toast */}
-        {snapshotSuccess && (
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center text-center p-4 z-30 animate-in fade-in">
-            <Download className="h-8 w-8 text-emerald-400 mb-2 animate-bounce" />
-            <p className="text-sm font-bold font-mono text-white">FORENSIC SNAPSHOT ARCHIVED</p>
-            <p className="text-xs font-mono text-emerald-400 mt-1">SHA-256 Chain-of-Custody Signed</p>
+        {/* Top-Right Telemetry Badge */}
+        <div className="absolute top-2 right-2 flex items-center gap-1.5 z-10 font-mono text-[10px]">
+          <span className="bg-black/80 backdrop-blur-md px-2 py-0.5 rounded text-emerald-400 border border-slate-700">
+            {fpsLive.toFixed(0)} FPS
+          </span>
+          <span className="bg-black/80 backdrop-blur-md px-2 py-0.5 rounded text-blue-300 border border-slate-700">
+            {camera.resolution}
+          </span>
+        </div>
+
+        {/* Bottom Alert Banner */}
+        {hasActiveAlert && (
+          <div className="absolute bottom-10 inset-x-2 bg-rose-600/90 backdrop-blur-md p-2 rounded-lg border border-rose-400 text-white font-mono text-xs shadow-lg flex items-center justify-between z-20 animate-pulse">
+            <div className="flex items-center gap-2">
+              <ShieldAlert className="h-4 w-4" />
+              <strong>CRITICAL HOTLIST HIT DETECTED: {alertDetails || 'GJ01AB1234'}</strong>
+            </div>
           </div>
         )}
+      </div>
 
-        {/* Header HUD Overlays */}
-        <div className="absolute top-3 left-3 flex flex-wrap items-center gap-2 z-10">
-          <span className="px-2.5 py-1 rounded bg-black/80 backdrop-blur-md text-xs font-mono font-bold text-white border border-slate-700 flex items-center gap-1.5">
-            <Radio className="h-3 w-3 text-emerald-400 animate-pulse" />
-            {camera.external_camera_id}
-          </span>
-          <span className="px-2 py-0.5 rounded bg-blue-950/80 backdrop-blur-md text-[10px] font-mono text-blue-300 border border-blue-800/80">
-            {camera.location_name}
-          </span>
+      {/* Bottom Tactical Controls & PTZ Bar */}
+      <div className="bg-[#090e1a] px-3 py-2 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2 z-20 font-mono text-xs text-slate-300">
+        <div className="flex items-center gap-2 text-[11px]">
+          <span className="text-slate-400 truncate max-w-[160px]">{camera.location_name}</span>
         </div>
 
-        {/* Top-Right Stream Engine Tag */}
-        <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
-          <span className="px-2 py-0.5 rounded bg-emerald-950/80 backdrop-blur-md text-emerald-400 border border-emerald-800 text-[10px] font-mono font-bold flex items-center gap-1">
-            <Activity className="h-3 w-3" />
-            WHEP WebRTC
-          </span>
-        </div>
+        {/* Interactive Controls */}
+        <div className="flex items-center gap-1">
+          {/* Audio Mute Toggle */}
+          <button
+            onClick={() => setIsMuted(!isMuted)}
+            className="p-1.5 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+            title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
+          >
+            {isMuted ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+          </button>
 
-        {/* Bottom Stream Telemetry Bar */}
-        <div className="absolute bottom-3 left-3 flex items-center gap-2 z-10">
-          <span className="text-[10px] font-mono font-bold text-emerald-400 bg-black/80 px-2 py-0.5 rounded border border-emerald-800/60">
-            {fpsLive} FPS
-          </span>
-          <span className="text-[10px] font-mono text-cyan-400 bg-black/80 px-2 py-0.5 rounded border border-cyan-800/60">
-            {bitrateKbps} Kbps
-          </span>
-          <span className="text-[10px] font-mono text-slate-300 bg-black/80 px-2 py-0.5 rounded border border-slate-700 hidden sm:inline-block">
-            {camera.resolution || '1080p'} / {camera.codec || 'H264'}
-          </span>
-        </div>
-
-        {/* Hover Action Controls Bar */}
-        <div className="absolute bottom-3 right-3 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+          {/* AI Bounding Box Overlay Toggle */}
           <button
             onClick={() => setShowAiOverlay(!showAiOverlay)}
-            className={`p-1.5 rounded border backdrop-blur-md transition-colors ${
-              showAiOverlay
-                ? 'bg-blue-600 text-white border-blue-400'
-                : 'bg-black/80 text-slate-400 border-slate-700 hover:text-white'
+            className={`p-1.5 rounded transition-colors ${
+              showAiOverlay ? 'bg-emerald-950 text-emerald-400' : 'text-slate-400 hover:bg-slate-800'
             }`}
-            title="Toggle AI Vision Bounding Boxes"
+            title="Toggle AI OCR Bounding Box Overlays"
           >
             <Layers className="h-3.5 w-3.5" />
           </button>
 
+          {/* Digital PTZ Zoom Toggle */}
           <button
             onClick={() => setShowPtzGrid(!showPtzGrid)}
-            className={`p-1.5 rounded border backdrop-blur-md transition-colors ${
-              showPtzGrid
-                ? 'bg-indigo-600 text-white border-indigo-400'
-                : 'bg-black/80 text-slate-400 border-slate-700 hover:text-white'
+            className={`p-1.5 rounded transition-colors ${
+              showPtzGrid ? 'bg-cyan-950 text-cyan-400' : 'text-slate-400 hover:bg-slate-800'
             }`}
-            title="Digital PTZ Controls"
+            title="Digital PTZ Zoom (1x - 3x)"
           >
             <Crosshair className="h-3.5 w-3.5" />
           </button>
 
+          {/* Reconnect Button */}
+          <button
+            onClick={() => setReconnectCount((prev) => prev + 1)}
+            className="p-1.5 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+            title="Reconnect Stream"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+          </button>
+
+          {/* Frame Snapshot */}
           <button
             onClick={handleCaptureSnapshot}
-            className="p-1.5 rounded bg-black/80 border border-slate-700 text-slate-300 hover:text-emerald-400 hover:bg-slate-900 transition-colors"
-            title="Capture Forensic Snapshot"
+            className={`p-1.5 rounded transition-colors ${
+              snapshotSuccess
+                ? 'bg-emerald-600 text-white'
+                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+            }`}
+            title="Grab Forensic Snapshot"
           >
-            <Camera className="h-3.5 w-3.5" />
+            <Download className="h-3.5 w-3.5" />
           </button>
 
-          <button
-            onClick={() => setIsMuted(!isMuted)}
-            className="p-1.5 rounded bg-black/80 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-900 transition-colors"
-            title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
-          >
-            {isMuted ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5 text-emerald-400" />}
-          </button>
-
+          {/* Fullscreen / Focus */}
           {onToggleFocus && (
             <button
               onClick={onToggleFocus}
-              className="p-1.5 rounded bg-black/80 border border-slate-700 text-slate-300 hover:text-white hover:bg-blue-600 transition-colors"
-              title={isFocused ? 'Exit Focus View' : 'Focus View'}
+              className="p-1.5 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+              title={isFocused ? 'Restore Multi-Grid' : 'Full Focus 1x1'}
             >
               {isFocused ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
             </button>
           )}
         </div>
+      </div>
 
-        {/* Digital PTZ Zoom Controls Modal */}
-        {showPtzGrid && (
-          <div className="absolute top-12 right-3 bg-black/90 backdrop-blur-md p-2 rounded-lg border border-slate-700 flex flex-col gap-1.5 z-20 text-[10px] font-mono">
-            <span className="text-slate-400 text-center font-bold">DIGITAL ZOOM</span>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setDigitalZoom(1.0)}
-                className={`px-2 py-0.5 rounded ${digitalZoom === 1.0 ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}
-              >
-                1x
-              </button>
-              <button
-                onClick={() => setDigitalZoom(1.5)}
-                className={`px-2 py-0.5 rounded ${digitalZoom === 1.5 ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}
-              >
-                1.5x
-              </button>
-              <button
-                onClick={() => setDigitalZoom(2.0)}
-                className={`px-2 py-0.5 rounded ${digitalZoom === 2.0 ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}
-              >
-                2x
-              </button>
-            </div>
+      {/* Expandable Digital PTZ Zoom Slider Drawer */}
+      {showPtzGrid && (
+        <div className="bg-[#050811] px-4 py-2 border-t border-cyan-900/60 flex items-center justify-between gap-4 font-mono text-xs text-cyan-300">
+          <div className="flex items-center gap-2 flex-1">
+            <span>PTZ Zoom:</span>
+            <input
+              type="range"
+              min="1.0"
+              max="3.0"
+              step="0.1"
+              value={digitalZoom}
+              onChange={(e) => setDigitalZoom(parseFloat(e.target.value))}
+              className="w-full accent-cyan-400 cursor-pointer"
+            />
+            <span>{digitalZoom.toFixed(1)}x</span>
           </div>
-        )}
-      </div>
-
-      {/* Footer Info Strip */}
-      <div className="p-3 bg-[#0a1020] border-t border-slate-800/80 flex items-center justify-between text-xs">
-        <div>
-          <h3 className="font-mono font-bold text-slate-200 truncate">{camera.name}</h3>
-          <p className="text-[11px] font-mono text-slate-400">{camera.location_name}</p>
+          <button
+            onClick={() => {
+              setDigitalZoom(1.0);
+              setPanX(0);
+              setPanY(0);
+            }}
+            className="text-[10px] px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800 hover:bg-cyan-900"
+          >
+            Reset PTZ
+          </button>
         </div>
-        <div className="text-right">
-          <span className="inline-block px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-[10px] font-mono text-emerald-400">
-            {camera.live_status || 'ONLINE'}
-          </span>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

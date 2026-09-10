@@ -23,6 +23,7 @@ import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { PriorityBadge, CameraStatusBadge } from '../components/common/Badge';
 import { StatusDot } from '../components/common/StatusDot';
+import { WhepVideoPlayer } from '../components/video/WhepVideoPlayer';
 
 interface DashboardPageProps {
   health: SystemHealthResponse | null;
@@ -169,41 +170,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {cameras.slice(0, 4).map((cam) => (
-                <div
-                  key={cam.id}
-                  onClick={() => onNavigate('live')}
-                  className="group relative bg-[#090e1a] rounded-xl border border-slate-800 hover:border-blue-500/60 transition-all overflow-hidden cursor-pointer shadow-md"
-                >
-                  {/* Mock Video Feed Screen with scanlines */}
-                  <div className="aspect-video bg-slate-950 relative flex items-center justify-center cctv-scanline">
-                    <div className="text-center p-4">
-                      <CameraIcon className="h-8 w-8 text-slate-600 mx-auto group-hover:text-blue-400 transition-colors" />
-                      <p className="text-[11px] font-mono text-slate-400 mt-2">
-                        STREAM: {cam.external_camera_id}
-                      </p>
-                      <p className="text-[10px] font-mono text-slate-500">{cam.location_name}</p>
-                    </div>
-
-                    {/* Live Stream Overlays */}
-                    <div className="absolute top-2 left-2 flex items-center gap-1.5">
-                      <span className="px-1.5 py-0.5 rounded bg-black/70 backdrop-blur-sm text-[10px] font-mono text-white border border-slate-700">
-                        {cam.name}
-                      </span>
-                    </div>
-
-                    <div className="absolute top-2 right-2">
-                      <CameraStatusBadge status={cam.live_status} fps={cam.fps} />
-                    </div>
-
-                    <div className="absolute bottom-2 left-2 flex items-center gap-2">
-                      <span className="text-[10px] font-mono text-emerald-400 bg-black/70 px-1.5 py-0.5 rounded border border-emerald-900/50">
-                        {cam.resolution}
-                      </span>
-                      <span className="text-[10px] font-mono text-blue-400 bg-black/70 px-1.5 py-0.5 rounded border border-blue-900/50">
-                        {cam.codec}
-                      </span>
-                    </div>
-                  </div>
+                <div key={cam.id} className="relative">
+                  <WhepVideoPlayer camera={cam} />
                 </div>
               ))}
             </div>

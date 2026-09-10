@@ -10,6 +10,7 @@ import {
   RefreshCw,
   Search,
   ShieldAlert,
+  Key,
 } from 'lucide-react';
 import { Camera } from '../types';
 import { Button } from '../components/common/Button';
@@ -27,106 +28,19 @@ export const LiveGridPage: React.FC<LiveGridPageProps> = ({ cameras }) => {
   const [showFilterDrawer, setShowFilterDrawer] = useState(false);
   const [simulatedAlertCameraId, setSimulatedAlertCameraId] = useState<string | null>(null);
 
-  // Generate fallback sample cameras if list is minimal
-  const allCameras: Camera[] = cameras.length >= 16 ? cameras : [
-    ...cameras,
-    {
-      id: 'cam-sim-01',
-      external_camera_id: 'CAM_AHM_001',
-      name: 'Ahmedabad Junction Entry Gate',
-      location_name: 'Ahmedabad Junction',
-      latitude: 23.0225,
-      longitude: 72.5714,
-      live_status: 'ONLINE',
-      fps: 25.0,
-      resolution: '1080p',
-      codec: 'H264',
-    },
-    {
-      id: 'cam-sim-02',
-      external_camera_id: 'CAM_AHM_002',
-      name: 'SG Highway — Iscon Flyover North',
-      location_name: 'SG Highway, Ahmedabad',
-      latitude: 23.0298,
-      longitude: 72.5074,
-      live_status: 'ONLINE',
-      fps: 30.0,
-      resolution: '1080p',
-      codec: 'H264',
-    },
-    {
-      id: 'cam-sim-03',
-      external_camera_id: 'CAM_AHM_003',
-      name: 'Ring Road — Vaishnodevi Circle',
-      location_name: 'Vaishnodevi Circle, Ahmedabad',
-      latitude: 23.1362,
-      longitude: 72.5448,
-      live_status: 'ONLINE',
-      fps: 25.0,
-      resolution: '1080p',
-      codec: 'H264',
-    },
-    {
-      id: 'cam-sim-04',
-      external_camera_id: 'CAM_SUR_001',
-      name: 'Surat Textile Market Gate 1',
-      location_name: 'Ring Road, Surat',
-      latitude: 21.1959,
-      longitude: 72.8302,
-      live_status: 'ONLINE',
-      fps: 25.0,
-      resolution: '1080p',
-      codec: 'H264',
-    },
-    {
-      id: 'cam-sim-05',
-      external_camera_id: 'CAM_SUR_002',
-      name: 'Dumas Road — Airport Junction',
-      location_name: 'Dumas Road, Surat',
-      latitude: 21.1274,
-      longitude: 72.7487,
-      live_status: 'ONLINE',
-      fps: 30.0,
-      resolution: '1080p',
-      codec: 'H264',
-    },
-    {
-      id: 'cam-sim-06',
-      external_camera_id: 'CAM_VAD_001',
-      name: 'Alkapuri Main Underpass',
-      location_name: 'Alkapuri, Vadodara',
-      latitude: 22.3107,
-      longitude: 73.1812,
-      live_status: 'ONLINE',
-      fps: 25.0,
-      resolution: '1080p',
-      codec: 'H264',
-    },
-    {
-      id: 'cam-sim-07',
-      external_camera_id: 'CAM_RAJ_001',
-      name: '150 Feet Ring Road Checkpoint',
-      location_name: 'Kalawad Road, Rajkot',
-      latitude: 22.2858,
-      longitude: 70.7684,
-      live_status: 'ONLINE',
-      fps: 25.0,
-      resolution: '1080p',
-      codec: 'H264',
-    },
-    {
-      id: 'cam-sim-08',
-      external_camera_id: 'CAM_GAN_001',
-      name: 'CH Road — Sector 11 Junction',
-      location_name: 'Sector 11, Gandhinagar',
-      latitude: 23.2156,
-      longitude: 72.6369,
-      live_status: 'ONLINE',
-      fps: 25.0,
-      resolution: '1080p',
-      codec: 'H264',
-    },
-  ];
+  const [showIntegratorGuide, setShowIntegratorGuide] = useState(false);
+  const [authEmail, setAuthEmail] = useState(localStorage.getItem('sentinel_email') || '');
+  const [authPassword, setAuthPassword] = useState(localStorage.getItem('sentinel_password') || '');
+  const [activeCodeTab, setActiveCodeTab] = useState<'python' | 'gstreamer' | 'ffmpeg'>('python');
+
+  const handleSaveCredentials = (e: React.FormEvent) => {
+    e.preventDefault();
+    localStorage.setItem('sentinel_email', authEmail);
+    localStorage.setItem('sentinel_password', authPassword);
+    setShowIntegratorGuide(false);
+  };
+
+  const allCameras = cameras;
 
   // Filtering
   const filteredCameras = allCameras.filter((c) => {
@@ -241,6 +155,16 @@ export const LiveGridPage: React.FC<LiveGridPageProps> = ({ cameras }) => {
             Districts ({selectedDistrict})
           </Button>
 
+          {/* Integrator Guide & Stream Credentials */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowIntegratorGuide(true)}
+            icon={<Key className="h-3.5 w-3.5 text-blue-400" />}
+          >
+            Stream Credentials & Guide
+          </Button>
+
           {/* Test Alert Simulator */}
           <Button
             variant="danger"
@@ -260,7 +184,7 @@ export const LiveGridPage: React.FC<LiveGridPageProps> = ({ cameras }) => {
       {showFilterDrawer && (
         <div className="bg-[#090f1d] p-3 rounded-xl border border-slate-800 flex flex-wrap items-center gap-2 text-xs font-mono animate-in slide-in-from-top duration-200">
           <span className="text-slate-400 font-bold mr-2">STATE DISTRICT:</span>
-          {['ALL', 'Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Gandhinagar'].map((district) => (
+          {['ALL', 'Ahmedabad', 'Gandhinagar', 'Junagadh', 'Surat', 'Vadodara', 'Rajkot', 'Somnath', 'Dwarka'].map((district) => (
             <button
               key={district}
               onClick={() => setSelectedDistrict(district)}
@@ -284,11 +208,11 @@ export const LiveGridPage: React.FC<LiveGridPageProps> = ({ cameras }) => {
         </div>
         <div className="bg-[#090e1a] p-3 rounded-lg border border-slate-800 flex items-center justify-between">
           <span className="text-xs font-mono text-slate-400">STREAM PROTOCOL</span>
-          <span className="text-sm font-bold font-mono text-blue-400">WHEP WebRTC</span>
+          <span className="text-sm font-bold font-mono text-blue-400">HLS (CDN) / WHEP</span>
         </div>
         <div className="bg-[#090e1a] p-3 rounded-lg border border-slate-800 flex items-center justify-between">
-          <span className="text-xs font-mono text-slate-400">MEAN LATENCY</span>
-          <span className="text-sm font-bold font-mono text-emerald-400">&lt; 150 ms</span>
+          <span className="text-xs font-mono text-slate-400">TOTAL REGISTERED</span>
+          <span className="text-sm font-bold font-mono text-emerald-400">{allCameras.length} Cameras</span>
         </div>
         <div className="bg-[#090e1a] p-3 rounded-lg border border-slate-800 flex items-center justify-between">
           <span className="text-xs font-mono text-slate-400">STATE STATUS</span>
@@ -336,6 +260,147 @@ export const LiveGridPage: React.FC<LiveGridPageProps> = ({ cameras }) => {
           >
             Reset Filters
           </Button>
+        </div>
+      )}
+
+      {/* Integrator's Guide & Stream Access Credentials Modal */}
+      {showIntegratorGuide && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#0c1424] border border-blue-600/40 rounded-2xl max-w-2xl w-full p-6 space-y-6 shadow-[0_0_50px_rgba(37,99,235,0.2)] max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+              <div>
+                <span className="text-[10px] font-mono font-bold text-blue-400 px-2 py-0.5 rounded bg-blue-950 border border-blue-800">
+                  SENTINEL // INTEGRATOR'S GUIDE
+                </span>
+                <h2 className="text-lg font-black text-white font-mono mt-1">
+                  Sentinel Camera Grid Credentials & Direct Ingestion
+                </h2>
+              </div>
+              <button
+                onClick={() => setShowIntegratorGuide(false)}
+                className="text-slate-400 hover:text-white font-mono text-sm px-2 py-1 rounded bg-slate-800"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Access Model Description */}
+            <div className="bg-[#080d19] p-4 rounded-xl border border-slate-800 space-y-2 text-xs font-mono text-slate-300">
+              <p>
+                <strong className="text-emerald-400">Access Model:</strong> HLS is served over CDN (
+                <code className="text-blue-300">https://cctv.corp8.cloud/</code>) behind your access password. RTSP & WebRTC/WHEP are served directly on public IP <code className="text-yellow-300">103.250.160.189</code>.
+              </p>
+              <p>
+                <strong className="text-emerald-400">Credentials Encoding:</strong> The <code className="text-cyan-300">@</code> in your email must be percent-encoded as <code className="text-cyan-300">%40</code> (e.g. <code className="text-slate-200">user%40example.com</code>).
+              </p>
+            </div>
+
+            {/* Credential Save Form */}
+            <form onSubmit={handleSaveCredentials} className="space-y-3 bg-[#080d19] p-4 rounded-xl border border-blue-900/40">
+              <h3 className="text-xs font-bold text-white font-mono">Set Authorized Credentials for RTSP/WHEP</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 font-mono text-xs">
+                <div>
+                  <label className="text-slate-400 text-[10px] block mb-1">Registered Email</label>
+                  <input
+                    type="text"
+                    value={authEmail}
+                    onChange={(e) => setAuthEmail(e.target.value)}
+                    placeholder="user@example.com"
+                    className="w-full bg-[#0c1424] border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-blue-400"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-400 text-[10px] block mb-1">Access Password</label>
+                  <input
+                    type="password"
+                    value={authPassword}
+                    onChange={(e) => setAuthPassword(e.target.value)}
+                    placeholder="Access Password"
+                    className="w-full bg-[#0c1424] border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-blue-400"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" variant="ghost" size="sm" onClick={() => setShowIntegratorGuide(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" variant="primary" size="sm">
+                  Save Credentials
+                </Button>
+              </div>
+            </form>
+
+            {/* Code Snippets for AI Inference */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-bold text-white font-mono">Inference Connection Snippets</h3>
+                <div className="flex gap-1 font-mono text-[10px]">
+                  {(['python', 'gstreamer', 'ffmpeg'] as const).map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveCodeTab(tab)}
+                      className={`px-2 py-0.5 rounded capitalize ${
+                        activeCodeTab === tab ? 'bg-blue-600 text-white font-bold' : 'bg-slate-800 text-slate-400'
+                      }`}
+                    >
+                      {tab}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-[#050811] p-3 rounded-xl border border-slate-800 font-mono text-[11px] text-slate-200 overflow-x-auto">
+                {activeCodeTab === 'python' && (
+                  <pre className="text-cyan-300">
+{`import os, cv2
+
+# RTSP over TCP (force TCP transport):
+os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;tcp"
+url = "rtsp://${authEmail ? authEmail.replace('@', '%40') : 'you%40example.com'}:${authPassword || 'YOUR_PASSWORD'}@103.250.160.189:8554/stream/cam01"
+cap = cv2.VideoCapture(url, cv2.CAP_FFMPEG)
+
+while True:
+    ok, frame = cap.read()
+    if not ok:
+        break
+    pts_ms = cap.get(cv2.CAP_PROP_POS_MSEC)`}
+                  </pre>
+                )}
+
+                {activeCodeTab === 'gstreamer' && (
+                  <pre className="text-emerald-300">
+{`gst-launch-1.0 rtspsrc location=rtsp://${authEmail ? authEmail.replace('@', '%40') : 'you%40example.com'}:${authPassword || 'YOUR_PASSWORD'}@103.250.160.189:8554/stream/cam01 protocols=tcp latency=200 \\
+  ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! fakesink`}
+                  </pre>
+                )}
+
+                {activeCodeTab === 'ffmpeg' && (
+                  <pre className="text-yellow-300">
+{`# FFplay RTSP over TCP:
+ffplay -rtsp_transport tcp "rtsp://${authEmail ? authEmail.replace('@', '%40') : 'you%40example.com'}:${authPassword || 'YOUR_PASSWORD'}@103.250.160.189:8554/stream/cam01"
+
+# FFplay HLS:
+ffplay https://cctv.corp8.cloud/cam01/index.m3u8`}
+                  </pre>
+                )}
+              </div>
+            </div>
+
+            {/* Direct Portal Link */}
+            <div className="flex items-center justify-between pt-2 border-t border-slate-800 text-xs font-mono">
+              <a
+                href="https://cctv.corp8.cloud/"
+                target="_blank"
+                rel="noreferrer"
+                className="text-blue-400 hover:text-blue-300 flex items-center gap-1"
+              >
+                Open Official Gujarat CCTV Grid Portal ↗
+              </a>
+              <Button variant="secondary" size="sm" onClick={() => setShowIntegratorGuide(false)}>
+                Close
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>
