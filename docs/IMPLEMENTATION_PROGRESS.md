@@ -405,5 +405,44 @@ This document tracks module-by-module implementation status, acceptance criteria
   - Python Linter: `ruff check backend` (0 errors)
   - Frontend: `npm run test` (4/4 passed in 6.52s)
 - **Test Result**: PASS
-- **Known Issues**: None.
 - **Next Module**: Module 11 — ByteTrack Multi-Object Tracking Engine
+
+---
+
+## Module 11 — ByteTrack Multi-Object Tracking Engine
+
+- **Status**: COMPLETE
+- **Implemented**:
+  - Installed `scipy` (v1.18.1) for linear sum assignment matching under 100% BSD-3 FOSS licensing.
+  - Implemented `TrackState` (`NEW`, `TRACKED`, `LOST`, `REMOVED`), `TrajectoryPoint`, `TrackedVehicle`, `FrameTrackingResult`, `TrackerConfig`, and `TrackerTelemetry` in `backend/app/schemas/tracking.py`.
+  - Built `KalmanFilterTracker`, `STrack`, `ByteTracker`, and `CameraTrackerManager` in `backend/app/services/byte_tracker.py`:
+    - Discrete constant-velocity Kalman filter predicting vehicle bounding boxes and updating motion states.
+    - Two-Stage Association Algorithm:
+      - **Stage 1**: Matches high-confidence detections ($conf \ge 0.45$) with active tracks using IoU cost matrix and `scipy.optimize.linear_sum_assignment`.
+      - **Stage 2**: Matches remaining unassigned tracks with low-confidence detections ($0.15 \le conf < 0.45$) to recover motion blur and temporary tree/vehicle occlusions without dropping track identity.
+    - **Duplicate OCR Suppression & Best Crop Selector**: Automatically tracks and upgrades the highest-confidence, largest vehicle crop across a track's lifespan to prevent running redundant OCR inferences.
+    - **Spatial Trajectory Breadcrumbs**: Computes vehicle center coordinates, normalized path vectors, and motion heading angle in degrees (0-360°).
+    - Per-camera multi-object tracking manager with configurable max lost frames (`max_lost_frames=30`).
+  - Implemented RESTful Tracking API routes in `backend/app/api/v1/tracking.py`:
+    - `GET /api/v1/tracking/telemetry`: Active tracks, lost counts, and tracking latency telemetry.
+    - `GET /api/v1/tracking/{camera_id}/active`: List all currently active confirmed vehicle tracks on a camera feed.
+    - `GET /api/v1/tracking/{camera_id}/trajectory/{track_id}`: Full spatial breadcrumb journey history for a specific track.
+    - `POST /api/v1/tracking/{camera_id}/reset`: Clear in-memory tracks and Kalman filter states for a camera.
+  - Built unit test suite in `backend/tests/unit/test_byte_tracker.py` testing Kalman filter steps, IoU distance matrices, track ID continuity across frames, best crop upgrades, 2nd-stage occlusion recovery, and REST API routes.
+- **Files Changed**:
+  - `backend/requirements.txt`
+  - `backend/app/schemas/tracking.py`
+  - `backend/app/schemas/__init__.py`
+  - `backend/app/services/byte_tracker.py`
+  - `backend/app/api/v1/tracking.py`
+  - `backend/app/api/v1/api.py`
+  - `backend/tests/unit/test_byte_tracker.py`
+  - `docs/IMPLEMENTATION_PROGRESS.md`
+- **Tests**:
+  - Backend: `pytest backend/tests` (51/51 passed in 8.96s)
+  - Python Linter: `ruff check backend` (0 errors)
+  - Frontend: `npm run test` (4/4 passed in 6.37s)
+- **Test Result**: PASS
+- **Known Issues**: None.
+- **Next Module**: Module 12 — ANPR Engine & Indian License Plate Normalizer (PaddleOCR)
+

@@ -57,6 +57,14 @@ from app.schemas.system import (
     SystemStatusData,
     VersionData,
 )
+from app.schemas.tracking import (
+    FrameTrackingResult,
+    TrackedVehicle,
+    TrackerConfig,
+    TrackerTelemetry,
+    TrackState,
+    TrajectoryPoint,
+)
 
 __all__ = [
     "APIResponse",
@@ -100,4 +108,10 @@ __all__ = [
     "FrameDetectionResult",
     "DetectorConfig",
     "DetectorTelemetry",
+    "TrackState",
+    "TrajectoryPoint",
+    "TrackedVehicle",
+    "FrameTrackingResult",
+    "TrackerConfig",
+    "TrackerTelemetry",
 ]
