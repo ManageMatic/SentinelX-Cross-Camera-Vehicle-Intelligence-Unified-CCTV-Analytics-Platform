@@ -511,6 +511,43 @@ This document tracks module-by-module implementation status, acceptance criteria
   - Python Linter: `ruff check backend` (0 errors)
   - Frontend: `npm run test` (4/4 passed in 6.91s)
 - **Test Result**: PASS
-- **Known Issues**: None.
 - **Next Module**: Module 14 — Real-time Vehicle Event Ingestion & Indexer
+
+---
+
+## Module 14 — Real-time Vehicle Event Ingestion & Indexer
+
+- **Status**: COMPLETE
+- **Implemented**:
+  - Implemented `VehicleEventCreate`, `VehicleEventBatchCreate`, `VehiclePlateResponse`, `VehicleEmbeddingResponse`, `VehicleEventResponse`, `EventIndexerTelemetry`, and `RecentEventsFilter` in `backend/app/schemas/events.py`.
+  - Built `EventIndexerService` in `backend/app/services/event_indexer.py`:
+    - **High-Throughput Multi-Modal Event Ingestion**: Aggregates AI vehicle detections, ByteTrack identities, ANPR license plates, Re-ID visual embeddings, and snapshots into transactional database records.
+    - **Automated Evidence Vault Storage & SHA-256 Non-Repudiation**: Automatically extracts, compresses, and saves vehicle snapshot crops and license plate crops to disk (`data/evidence/vehicles/` and `data/evidence/plates/`), calculating cryptographic SHA-256 checksums to establish evidentiary chain-of-custody.
+    - **In-Memory Ring Buffer (<1ms Lookups)**: Thread-safe 1000-event ring buffer enabling immediate sub-millisecond filtering by camera UUID, vehicle class, and plate text without hitting disk/DB.
+    - **Automatic Geospatial Enrichment**: Resolves camera latitude, longitude, and junction names for incoming events if omitted.
+    - **Batch Transaction Processor**: Bulk event ingestion reducing database overhead.
+    - Real-time ingestion telemetry tracking total events, EPS (events per second), latency (ms), and storage footprint in bytes.
+  - Implemented RESTful Event Ingestion & Indexer API routes in `backend/app/api/v1/events.py`:
+    - `POST /api/v1/events/ingest`: Ingest a single vehicle intelligence event with plate, embedding, and snapshot evidence.
+    - `POST /api/v1/events/batch-ingest`: Ingest multiple vehicle events in an optimized database transaction.
+    - `GET /api/v1/events/recent`: Retrieve in-memory recent vehicle events in sub-millisecond time with filters.
+    - `GET /api/v1/events/telemetry`: Get real-time event ingestion throughput, EPS, latency, and storage metrics.
+    - `GET /api/v1/events/{event_id}`: Fetch complete indexed vehicle event details from database by UUID.
+  - Built unit test suite in `backend/tests/unit/test_event_indexer.py` testing SHA-256 calculation, database event ingestion, batch ingestion, in-memory filter search, telemetry tracking, and REST API endpoints.
+- **Files Changed**:
+  - `backend/app/schemas/events.py`
+  - `backend/app/schemas/__init__.py`
+  - `backend/app/services/event_indexer.py`
+  - `backend/app/api/v1/events.py`
+  - `backend/app/api/v1/api.py`
+  - `backend/tests/unit/test_event_indexer.py`
+  - `docs/IMPLEMENTATION_PROGRESS.md`
+- **Tests**:
+  - Backend: `pytest backend/tests` (68/68 passed in 9.62s)
+  - Python Linter: `ruff check backend` (0 errors)
+  - Frontend: `npm run test` (4/4 passed in 6.52s)
+- **Test Result**: PASS
+- **Known Issues**: None.
+- **Next Module**: Module 15 — Sub-200ms Vehicle Search Engine
+
 

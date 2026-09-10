@@ -41,6 +41,15 @@ from app.schemas.detection import (
     FrameDetectionResult,
     VehicleClass,
 )
+from app.schemas.events import (
+    EventIndexerTelemetry,
+    RecentEventsFilter,
+    VehicleEmbeddingResponse,
+    VehicleEventBatchCreate,
+    VehicleEventCreate,
+    VehicleEventResponse,
+    VehiclePlateResponse,
+)
 from app.schemas.proxy import (
     CameraStreamEndpoints,
     StreamProxyInfo,
@@ -142,4 +151,11 @@ __all__ = [
     "SimilarityComparisonRequest",
     "ReIDConfig",
     "ReIDTelemetry",
+    "VehicleEventCreate",
+    "VehicleEventBatchCreate",
+    "VehiclePlateResponse",
+    "VehicleEmbeddingResponse",
+    "VehicleEventResponse",
+    "EventIndexerTelemetry",
+    "RecentEventsFilter",
 ]
