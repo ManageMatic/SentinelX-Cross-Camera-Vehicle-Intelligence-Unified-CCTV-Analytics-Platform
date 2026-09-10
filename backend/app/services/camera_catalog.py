@@ -100,20 +100,38 @@ class CameraCatalogService:
         )
 
         # 5. RTSP URL & Protocols
-        rtsp = (
-            item.rtsp_url
-            or item.stream_url
-            or item.url
-            or f"rtsp://127.0.0.1:{settings.SENTINEL_RTSP_PORT}/live/{ext_id.lower().replace('-', '_')}"
-        )
-        whep = (
-            item.whep_url
-            or f"http://127.0.0.1:{settings.SENTINEL_WHEP_PORT}/{ext_id.lower().replace('-', '_')}/whep"
-        )
-        hls = (
-            item.hls_url
-            or f"http://127.0.0.1:{settings.SENTINEL_HLS_PORT}/{ext_id.lower().replace('-', '_')}/index.m3u8"
-        )
+        clean_id = ext_id.lower().replace("-", "").replace("_", "")
+        if settings.SENTINEL_EMAIL and settings.SENTINEL_ACCESS_CODE:
+            encoded_email = settings.SENTINEL_EMAIL.replace("@", "%40")
+            rtsp = (
+                item.rtsp_url
+                or item.stream_url
+                or item.url
+                or f"rtsp://{encoded_email}:{settings.SENTINEL_ACCESS_CODE}@{settings.SENTINEL_DIRECT_IP}:{settings.SENTINEL_RTSP_PORT}/stream/{clean_id}"
+            )
+            whep = (
+                item.whep_url
+                or f"http://{encoded_email}:{settings.SENTINEL_ACCESS_CODE}@{settings.SENTINEL_DIRECT_IP}:{settings.SENTINEL_WHEP_PORT}/stream/{clean_id}/whep"
+            )
+            hls = (
+                item.hls_url
+                or f"{settings.SENTINEL_BASE_URL}/{clean_id}/index.m3u8"
+            )
+        else:
+            rtsp = (
+                item.rtsp_url
+                or item.stream_url
+                or item.url
+                or f"rtsp://127.0.0.1:{settings.SENTINEL_RTSP_PORT}/live/{clean_id}"
+            )
+            whep = (
+                item.whep_url
+                or f"http://127.0.0.1:{settings.SENTINEL_WHEP_PORT}/{clean_id}/whep"
+            )
+            hls = (
+                item.hls_url
+                or f"http://127.0.0.1:{settings.SENTINEL_HLS_PORT}/{clean_id}/index.m3u8"
+            )
 
         return CameraBase(
             external_camera_id=ext_id,

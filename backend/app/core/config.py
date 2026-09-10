@@ -6,7 +6,7 @@ creation, and secure secret masking for audit and logging.
 
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -50,7 +50,11 @@ class Settings(BaseSettings):
     VALKEY_URL: str = "redis://localhost:6379/0"
 
     # Sentinel Sandbox Ingestion Configuration
-    SENTINEL_CATALOG_URL: str = "http://localhost:8000/api/ingest"
+    SENTINEL_EMAIL: Optional[str] = None
+    SENTINEL_ACCESS_CODE: Optional[str] = None
+    SENTINEL_BASE_URL: str = "https://cctv.corp8.cloud"
+    SENTINEL_DIRECT_IP: str = "103.250.160.189"
+    SENTINEL_CATALOG_URL: str = "https://cctv.corp8.cloud/cameras.json"
     SENTINEL_HOST: str = "localhost"
     SENTINEL_RTSP_PORT: int = Field(default=8554, ge=1, le=65535)
     SENTINEL_WHEP_PORT: int = Field(default=8889, ge=1, le=65535)
@@ -104,6 +108,7 @@ class Settings(BaseSettings):
             "JWT_SECRET",
             "POSTGRES_PASSWORD",
             "SECRET_KEY",
+            "SENTINEL_ACCESS_CODE",
         }
         for key in sensitive_keys:
             if key in data and data[key]:

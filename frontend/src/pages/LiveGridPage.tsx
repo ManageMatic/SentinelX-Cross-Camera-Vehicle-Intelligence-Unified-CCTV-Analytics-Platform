@@ -30,10 +30,10 @@ export const LiveGridPage: React.FC<LiveGridPageProps> = ({ cameras }) => {
 
   const [showIntegratorGuide, setShowIntegratorGuide] = useState(false);
   const [authEmail, setAuthEmail] = useState(
-    localStorage.getItem('sentinel_email') || 'ishanmahida123@gmail.com'
+    localStorage.getItem('sentinel_email') || ''
   );
   const [authPassword, setAuthPassword] = useState(
-    localStorage.getItem('sentinel_password') || '7M96-5VHZ-HL7B'
+    localStorage.getItem('sentinel_password') || ''
   );
   const [activeCodeTab, setActiveCodeTab] = useState<'python' | 'gstreamer' | 'ffmpeg'>('python');
 

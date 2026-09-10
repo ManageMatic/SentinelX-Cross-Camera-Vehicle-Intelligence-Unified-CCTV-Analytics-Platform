@@ -79,17 +79,13 @@ export async function fetchSystemStats(): Promise<SystemStats> {
   };
 }
 
-export const AUTH_EMAIL = 'ishanmahida123@gmail.com';
-export const AUTH_ENCODED_EMAIL = 'ishanmahida123%40gmail.com';
-export const AUTH_ACCESS_CODE = '7M96-5VHZ-HL7B';
-
-// Helper to construct authenticated RTSP, WHEP and HLS URLs
+// Helper to construct browser-safe stream URLs
 export function getCameraStreamUrls(camId: string) {
   const cleanId = camId.toLowerCase().replace(/[^a-z0-9]/g, '');
   return {
     hls: `https://cctv.corp8.cloud/${cleanId}/index.m3u8`,
-    whep: `http://${AUTH_ENCODED_EMAIL}:${AUTH_ACCESS_CODE}@103.250.160.189:8889/stream/${cleanId}/whep`,
-    rtsp: `rtsp://${AUTH_ENCODED_EMAIL}:${AUTH_ACCESS_CODE}@103.250.160.189:8554/stream/${cleanId}`,
+    whep: `/api/v1/proxy/${cleanId}/whep`,
+    snapshot: `/api/v1/proxy/${cleanId}/snapshot`,
   };
 }
 
@@ -107,8 +103,8 @@ export const DEMO_CAMERAS: Camera[] = [
     resolution: '1920x1080',
     codec: 'H264',
     hls_url: 'https://cctv.corp8.cloud/cam01/index.m3u8',
-    whep_url: `http://${AUTH_ENCODED_EMAIL}:${AUTH_ACCESS_CODE}@103.250.160.189:8889/stream/cam01/whep`,
-    rtsp_url: `rtsp://${AUTH_ENCODED_EMAIL}:${AUTH_ACCESS_CODE}@103.250.160.189:8554/stream/cam01`,
+    whep_url: '/api/v1/proxy/cam01/whep',
+    rtsp_url: 'rtsp://103.250.160.189:8554/stream/cam01',
   },
   {
     id: 'cam02',
