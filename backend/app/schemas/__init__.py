@@ -1,5 +1,12 @@
 """Pydantic Schemas Package for SentinelX."""
 
+from app.schemas.anpr import (
+    ANPRBatchResult,
+    ANPRConfig,
+    ANPRResult,
+    ANPRTelemetry,
+    PlateCategory,
+)
 from app.schemas.buffer import (
     BackpressureLevel,
     BufferConfig,
@@ -114,4 +121,9 @@ __all__ = [
     "FrameTrackingResult",
     "TrackerConfig",
     "TrackerTelemetry",
+    "PlateCategory",
+    "ANPRResult",
+    "ANPRBatchResult",
+    "ANPRConfig",
+    "ANPRTelemetry",
 ]

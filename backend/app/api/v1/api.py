@@ -1,6 +1,7 @@
 """Master API Router for v1 endpoints."""
 
 from app.api.v1 import (
+    anpr,
     buffers,
     cameras,
     detection,
@@ -21,3 +22,4 @@ api_router.include_router(proxy.router, prefix="", tags=["WebRTC & HLS Stream Pr
 api_router.include_router(buffers.router, prefix="", tags=["Frame Buffers & Backpressure"])
 api_router.include_router(detection.router, prefix="", tags=["AI Vehicle Detection"])
 api_router.include_router(tracking.router, prefix="", tags=["Multi-Object Tracking (ByteTrack)"])
+api_router.include_router(anpr.router, prefix="", tags=["ANPR & Plate Recognition"])

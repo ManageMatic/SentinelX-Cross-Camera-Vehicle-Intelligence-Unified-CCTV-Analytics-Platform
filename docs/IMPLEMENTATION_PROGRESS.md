@@ -442,7 +442,40 @@ This document tracks module-by-module implementation status, acceptance criteria
   - Backend: `pytest backend/tests` (51/51 passed in 8.96s)
   - Python Linter: `ruff check backend` (0 errors)
   - Frontend: `npm run test` (4/4 passed in 6.37s)
-- **Test Result**: PASS
-- **Known Issues**: None.
 - **Next Module**: Module 12 — ANPR Engine & Indian License Plate Normalizer (PaddleOCR)
 
+---
+
+## Module 12 — ANPR Engine & Indian License Plate Normalizer (PaddleOCR)
+
+- **Status**: COMPLETE
+- **Implemented**:
+  - Implemented `PlateCategory` (`STANDARD`, `BHARAT_SERIES`, `COMMERCIAL`, `ELECTRIC`, `DIPLOMATIC`, `MILITARY`, `TEMPORARY`), `ANPRResult`, `ANPRBatchResult`, `ANPRConfig`, and `ANPRTelemetry` in `backend/app/schemas/anpr.py`.
+  - Built `ANPREngine` in `backend/app/services/anpr_engine.py`:
+    - Full support for all 36 Indian State and Union Territory RTO codes (e.g. `GJ`, `MH`, `DL`, `RJ`, `KA`, `TN`, `UP`, etc.).
+    - Robust regex parser validating standard state plates (`GJ01AB1234`), Bharat (BH) series (`22BH1234AA`), diplomatic, and temporary registrations.
+    - **Position-Aware Character Disambiguation Engine**: Resolves common optical OCR confusion pairs (`O` $\leftrightarrow$ `0`, `I`/`L` $\leftrightarrow$ `1`, `Z` $\leftrightarrow$ `2`, `S` $\leftrightarrow$ `5`, `B` $\leftrightarrow$ `8`, `G` $\leftrightarrow$ `6`) based on the slot syntax rules of Indian license plates (e.g. converting `'GJO1ABI234'` to `'GJ01AB1234'`).
+    - **CCTV Image Pre-processing**: Contrast Limited Adaptive Histogram Equalization (CLAHE) and bilateral edge-preserving denoising for nighttime and high-glare surveillance footage.
+    - Real-time throughput and accuracy telemetry tracking average latency, syntax validity rate (%), and distribution by state.
+  - Implemented RESTful ANPR API routes in `backend/app/api/v1/anpr.py`:
+    - `GET /api/v1/anpr/telemetry`: OCR processing latency, total plates processed, validity %, and state breakdowns.
+    - `GET /api/v1/anpr/states`: Complete list of 36 supported Indian State and Union Territory codes.
+    - `POST /api/v1/anpr/normalize-text`: Clean and disambiguate raw license plate strings for database search.
+    - `POST /api/v1/anpr/recognize-crop`: High-performance multipart image upload endpoint returning localized OCR and plate metadata.
+    - `POST /api/v1/anpr/configure`: Dynamic tuning of confidence thresholds, CLAHE filters, and target states.
+  - Built unit test suite in `backend/tests/unit/test_anpr_engine.py` testing standard plates, BH series, OCR disambiguation, CLAHE enhancement, crop recognition, and REST API routes.
+- **Files Changed**:
+  - `backend/app/schemas/anpr.py`
+  - `backend/app/schemas/__init__.py`
+  - `backend/app/services/anpr_engine.py`
+  - `backend/app/api/v1/anpr.py`
+  - `backend/app/api/v1/api.py`
+  - `backend/tests/unit/test_anpr_engine.py`
+  - `docs/IMPLEMENTATION_PROGRESS.md`
+- **Tests**:
+  - Backend: `pytest backend/tests` (57/57 passed in 9.15s)
+  - Python Linter: `ruff check backend` (0 errors)
+  - Frontend: `npm run test` (4/4 passed in 6.91s)
+- **Test Result**: PASS
+- **Known Issues**: None.
+- **Next Module**: Module 13 — Vehicle Appearance Re-ID & Visual Embedding Generator
