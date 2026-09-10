@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Hls from 'hls.js';
 import {
-  Camera,
   Maximize2,
   Minimize2,
   Volume2,
@@ -9,15 +8,9 @@ import {
   Crosshair,
   ShieldAlert,
   Download,
-  Activity,
   Radio,
   Layers,
   RefreshCw,
-  Sliders,
-  Tv,
-  Wifi,
-  WifiOff,
-  Settings,
   ExternalLink,
 } from 'lucide-react';
 import { Camera as CameraType } from '../../types';
@@ -42,7 +35,7 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
   const hlsInstanceRef = useRef<Hls | null>(null);
 
   // Player State
-  const [streamMode, setStreamMode] = useState<'hls' | 'whep' | 'ai_canvas'>('hls');
+  const [streamMode, setStreamMode] = useState<'hls' | 'whep' | 'ai_canvas'>('ai_canvas');
   const [isPlayingLive, setIsPlayingLive] = useState(false);
   const [streamError, setStreamError] = useState<string | null>(null);
   const [isMuted, setIsMuted] = useState(true);
@@ -51,16 +44,12 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
   const [digitalZoom, setDigitalZoom] = useState(1.0);
   const [panX, setPanX] = useState(0);
   const [panY, setPanY] = useState(0);
-  const [fpsLive, setFpsLive] = useState(camera.fps || 25.0);
-  const [bitrateKbps, setBitrateKbps] = useState(3840);
   const [snapshotSuccess, setSnapshotSuccess] = useState(false);
   const [reconnectCount, setReconnectCount] = useState(0);
 
   // Format Official Sentinel Grid Stream URLs
   const camId = camera.external_camera_id.toLowerCase().replace(/[^a-z0-9]/g, '');
   const hlsStreamUrl = camera.hls_url || `https://cctv.corp8.cloud/${camId}/index.m3u8`;
-  const whepStreamUrl = camera.whep_url || `http://103.250.160.189:8889/stream/${camId}/whep`;
-  const rtspStreamUrl = camera.rtsp_url || `rtsp://103.250.160.189:8554/stream/${camId}`;
 
   // Initialize HLS.js or Native Video Stream
   useEffect(() => {
@@ -380,10 +369,26 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
 
         {/* Connecting / Status Overlay */}
         {streamMode === 'hls' && !isPlayingLive && (
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center gap-2 z-10 text-xs font-mono text-slate-300">
+          <div className="absolute inset-0 bg-black/75 backdrop-blur-sm flex flex-col items-center justify-center gap-2 z-10 text-xs font-mono text-slate-300 p-4 text-center">
             <Radio className="h-6 w-6 text-blue-400 animate-spin-slow" />
-            <span>Connecting to Sentinel Stream ({camera.external_camera_id})...</span>
-            <span className="text-[10px] text-slate-500">https://cctv.corp8.cloud/</span>
+            <span className="font-bold text-white">Connecting to {camera.name} ({camera.external_camera_id})</span>
+            {streamError && <span className="text-[10px] text-amber-300">{streamError}</span>}
+            <div className="flex items-center gap-2 mt-2">
+              <button
+                onClick={() => setStreamMode('ai_canvas')}
+                className="px-2.5 py-1 rounded bg-emerald-700 hover:bg-emerald-600 text-white text-[11px] font-bold"
+              >
+                Switch to AI Live
+              </button>
+              <a
+                href="https://cctv.corp8.cloud/"
+                target="_blank"
+                rel="noreferrer"
+                className="px-2.5 py-1 rounded bg-blue-700 hover:bg-blue-600 text-white text-[11px] font-bold flex items-center gap-1"
+              >
+                Open Cloud Portal ↗
+              </a>
+            </div>
           </div>
         )}
 
@@ -401,7 +406,7 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
         {/* Top-Right Telemetry Badge */}
         <div className="absolute top-2 right-2 flex items-center gap-1.5 z-10 font-mono text-[10px]">
           <span className="bg-black/80 backdrop-blur-md px-2 py-0.5 rounded text-emerald-400 border border-slate-700">
-            {fpsLive.toFixed(0)} FPS
+            {(camera.fps || 25.0).toFixed(0)} FPS
           </span>
           <span className="bg-black/80 backdrop-blur-md px-2 py-0.5 rounded text-blue-300 border border-slate-700">
             {camera.resolution}
