@@ -140,6 +140,14 @@ from app.schemas.resilience import (
     StreamHealthSummary,
     StreamWatchdogRecord,
 )
+from app.schemas.scalability import (
+    BandwidthBenchmarkResult,
+    EdgeGatewayNode,
+    EdgeSimulationConfig,
+    EdgeSimulationRunResult,
+    GujaratDistrict,
+    StatewideClusterTopology,
+)
 from app.schemas.search import (
     FuzzyPlateCandidate,
     SearchResultItem,
@@ -342,6 +350,13 @@ __all__ = [
     "PubSubPublishResponse",
     "HotlistCacheSyncResult",
     "CameraStatusCacheItem",
+    "GujaratDistrict",
+    "EdgeGatewayNode",
+    "EdgeSimulationConfig",
+    "BandwidthBenchmarkResult",
+    "EdgeSimulationRunResult",
+    "StatewideClusterTopology",
 ]
+
 
 

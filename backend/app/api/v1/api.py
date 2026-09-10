@@ -16,6 +16,7 @@ from app.api.v1 import (
     journey,
     proxy,
     reid,
+    scalability,
     search,
     streams,
     system,
@@ -57,4 +58,8 @@ api_router.include_router(
 api_router.include_router(
     cache.router, prefix="", tags=["Valkey In-Memory Cache & Broker"]
 )
+api_router.include_router(
+    scalability.router, prefix="", tags=["Statewide Scalability & Edge Gateways"]
+)
+
 
