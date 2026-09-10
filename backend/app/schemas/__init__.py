@@ -19,6 +19,12 @@ from app.schemas.common import (
     PaginationParams,
     utc_now_iso,
 )
+from app.schemas.stream import (
+    StreamPoolStatus,
+    StreamWorkerState,
+    StreamWorkerStats,
+    VideoFrame,
+)
 from app.schemas.system import (
     ComponentHealth,
     HealthData,
@@ -46,4 +52,8 @@ __all__ = [
     "CameraSourceResponse",
     "CameraHealthResponse",
     "CameraSyncResult",
+    "VideoFrame",
+    "StreamWorkerState",
+    "StreamWorkerStats",
+    "StreamPoolStatus",
 ]

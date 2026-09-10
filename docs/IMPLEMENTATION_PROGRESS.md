@@ -240,6 +240,34 @@ This document tracks module-by-module implementation status, acceptance criteria
   - Frontend: `npm run test` (4/4 passed in 2.37s)
 - **Test Result**: PASS
 - **Known Issues**: None.
-- **Next Module**: Module 6 — RTSP / TCP Stream Ingestion Worker
+## Module 6 — RTSP / TCP Stream Ingestion Worker
+
+- **Status**: COMPLETE
+- **Implemented**:
+  - Implemented `VideoFrame`, `StreamWorkerState`, `StreamWorkerStats`, and `StreamPoolStatus` in `backend/app/schemas/stream.py`.
+  - Enforced RTSP over TCP via `OPENCV_FFMPEG_CAPTURE_OPTIONS=rtsp_transport;tcp` and zero queue buffering (`cv2.CAP_PROP_BUFFERSIZE=1`) to eliminate packet loss and visual artifacting on lossy networks.
+  - Implemented `RTSPStreamWorker` and `StreamWorkerPool` in `backend/app/services/stream_worker.py` with multi-threaded ingestion loops, sliding-window FPS measurement, frame arrival tracking, and synthetic video stream generator for headless CI/CD and testing.
+  - Implemented RESTful stream telemetry endpoints in `backend/app/api/v1/streams.py`:
+    - `GET /api/v1/streams/status`: Aggregate telemetry and FPS across all active stream workers.
+    - `GET /api/v1/streams/{camera_id}/stats`: Real-time worker performance metrics for a specific camera.
+    - `POST /api/v1/streams/{camera_id}/start`: Start video stream ingestion worker.
+    - `POST /api/v1/streams/{camera_id}/stop`: Stop video stream worker.
+  - Built comprehensive automated unit test suite in `backend/tests/unit/test_stream_worker.py` verifying frame generation, FPS computation, thread-safe access, worker pool lifecycle, and REST API routes.
+- **Files Changed**:
+  - `backend/app/schemas/stream.py`
+  - `backend/app/schemas/__init__.py`
+  - `backend/app/services/stream_worker.py`
+  - `backend/app/api/v1/streams.py`
+  - `backend/app/api/v1/api.py`
+  - `backend/tests/unit/test_stream_worker.py`
+  - `docs/IMPLEMENTATION_PROGRESS.md`
+- **Tests**:
+  - Backend: `pytest backend/tests` (26/26 passed in 1.61s)
+  - Python Linter: `ruff check backend` (0 errors)
+  - Frontend: `npm run test` (4/4 passed in 2.37s)
+- **Test Result**: PASS
+- **Known Issues**: None.
+- **Next Module**: Module 7 — Resilient Stream Manager & Auto-Reconnect Engine
+
 
 
