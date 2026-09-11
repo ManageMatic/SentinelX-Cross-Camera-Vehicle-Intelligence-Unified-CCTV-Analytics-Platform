@@ -1,0 +1,12 @@
+{
+  "name": "netra-x-platform",
+  "version": "1.0.0",
+  "description": "NETRA-X — Unified Vehicle Tracking & Command Intelligence Platform",
+  "scripts": {
+    "dev": "python run_all.py",
+    "start": "python run_all.py",
+    "frontend": "npm --prefix frontend run dev",
+    "frontend:test": "npm --prefix frontend test",
+    "backend:test": "backend\\.venv\\Scripts\\python.exe -m pytest backend/tests"
+  }
+}
