@@ -377,7 +377,7 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
           width={640}
           height={360}
           className={`absolute inset-0 w-full h-full object-cover pointer-events-none ${
-            streamMode === 'ai_canvas' ? 'block' : 'block'
+            streamMode === 'ai_canvas' || hasActiveAlert ? 'block' : 'hidden'
           }`}
         />
 

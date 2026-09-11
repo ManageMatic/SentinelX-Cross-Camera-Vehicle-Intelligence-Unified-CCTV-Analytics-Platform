@@ -97,71 +97,18 @@ class CameraStreamSession:
         with self._lock:
             return self._latest_jpeg
 
-    def _generate_synthetic_cctv_frame(self, seq: int) -> bytes:
-        """Generates dynamic, animated tactical CCTV surveillance video frame at 25 FPS."""
-        w, h = 640, 360
-        frame = np.zeros((h, w, 3), dtype=np.uint8)
-
-        # Background gradient & perspective road
-        frame[:] = (12, 8, 5)  # Dark navy background
-
-        # Perspective road vanishing lines
-        cv2.line(frame, (int(w * 0.5), int(h * 0.2)), (0, h), (45, 30, 15), 1)
-        cv2.line(frame, (int(w * 0.5), int(h * 0.2)), (w, h), (45, 30, 15), 1)
-        cv2.line(frame, (int(w * 0.5), int(h * 0.2)), (int(w * 0.35), h), (60, 45, 20), 1)
-        cv2.line(frame, (int(w * 0.5), int(h * 0.2)), (int(w * 0.65), h), (60, 45, 20), 1)
-
-        # Moving road lane dividers (animated with sequence counter)
-        offset = (seq * 4) % 40
-        for y in range(int(h * 0.25) + offset, h, 40):
-            ratio = (y - h * 0.2) / (h * 0.8)
-            lx = int(w * 0.5 - 20 * ratio)
-            rx = int(w * 0.5 + 20 * ratio)
-            cv2.line(frame, (int(w * 0.5), y), (int(w * 0.5), min(y + 15, h)), (0, 200, 255), 2)
-
-        # Animated Simulated Vehicles with OCR Tracking Box
-        t = seq * 0.05
-        # Vehicle 1: Sedan
-        v1_x = int((np.sin(t) * 0.3 + 0.45) * (w - 120))
-        v1_y = int(h * 0.6)
-        cv2.rectangle(frame, (v1_x, v1_y), (v1_x + 90, v1_y + 45), (255, 180, 50), 2)
-        cv2.rectangle(frame, (v1_x, v1_y - 18), (v1_x + 85, v1_y), (15, 10, 5), -1)
-        cv2.putText(frame, "GJ01AB1234", (v1_x + 4, v1_y - 4), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (255, 220, 100), 1)
-
-        # Vehicle 2: SUV
-        v2_x = int((np.cos(t * 0.8) * 0.3 + 0.55) * (w - 120))
-        v2_y = int(h * 0.72)
-        cv2.rectangle(frame, (v2_x, v2_y), (v2_x + 110, v2_y + 55), (80, 220, 120), 2)
-        cv2.rectangle(frame, (v2_x, v2_y - 18), (v2_x + 95, v2_y), (15, 10, 5), -1)
-        cv2.putText(frame, "GJ27K8890", (v2_x + 4, v2_y - 4), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (100, 255, 150), 1)
-
-        # Top Overlay: Timestamp & Camera Title
-        now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S.%f")[:-4] + " UTC"
-        cv2.rectangle(frame, (0, 0), (w, 24), (10, 15, 25), -1)
-        cv2.putText(frame, f"NETRA-X LIVE: {self.camera_id.upper()} | {now_str}", (8, 16), cv2.FONT_HERSHEY_SIMPLEX, 0.38, (0, 255, 200), 1)
-
-        # Status Pill: Reconnecting or Active
-        status_text = "TCP STREAM ACTIVE" if self.is_online else "RTSP RECONNECTING"
-        status_color = (0, 255, 100) if self.is_online else (0, 165, 255)
-        cv2.putText(frame, status_text, (w - 150, 16), cv2.FONT_HERSHEY_SIMPLEX, 0.35, status_color, 1)
-
-        ok, buf = cv2.imencode(".jpg", frame, [int(cv2.IMWRITE_JPEG_QUALITY), 70])
-        return buf.tobytes() if ok else b""
-
     async def mjpeg_generator(self):
         """Generates continuous multipart JPEG stream for real-time browser playback."""
-        synth_seq = 0
+        last_sent = None
         while not self._stop_event.is_set():
-            synth_seq += 1
             jpeg = self.get_latest_jpeg()
-            # If real RTSP frame is not yet available, stream dynamic synthetic CCTV video
-            frame_bytes = jpeg if (jpeg and self.is_online) else self._generate_synthetic_cctv_frame(synth_seq)
-            if frame_bytes:
+            if jpeg and jpeg != last_sent:
+                last_sent = jpeg
                 yield (
                     b"--frame\r\n"
-                    b"Content-Type: image/jpeg\r\n\r\n" + frame_bytes + b"\r\n"
+                    b"Content-Type: image/jpeg\r\n\r\n" + jpeg + b"\r\n"
                 )
-            await asyncio.sleep(0.04)  # ~25 FPS live video rate
+            await asyncio.sleep(0.04)  # ~25 FPS
 
     def _run_loop(self):
         """Continuous video frame ingestion loop with exponential reconnect."""
