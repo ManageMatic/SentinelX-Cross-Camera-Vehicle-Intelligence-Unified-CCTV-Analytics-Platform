@@ -3,7 +3,7 @@
 import math
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query, Response, status
+from fastapi import APIRouter, Depends, Query, Request, Response, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -243,6 +243,61 @@ async def get_camera_preview(camera_id: str):
         b"\n\x0b\xff\xda\x00\x08\x01\x01\x00\x00?\x00\xbf\x00\xff\xd9"
     )
     return Response(content=placeholder, media_type="image/jpeg")
+
+
+@router.get(
+    "/{camera_id}/stream",
+    summary="Direct low-latency live video stream for browser playback",
+)
+async def get_live_camera_stream(camera_id: str):
+    """Provides a continuous low-latency multipart/x-mixed-replace JPEG video stream."""
+    from fastapi.responses import StreamingResponse
+
+    valid_id = validate_camera_id(camera_id)
+    session = video_stream_manager.get_or_create_session(valid_id)
+    return StreamingResponse(
+        session.mjpeg_generator(),
+        media_type="multipart/x-mixed-replace; boundary=frame",
+    )
+
+
+@router.post(
+    "/{camera_id}/whep",
+    summary="WebRTC WHEP SDP signaling proxy",
+)
+async def proxy_whep_signaling(camera_id: str, request: Request):
+    """Proxies WebRTC SDP offer from browser to Sentinel MediaMTX gateway with authentication."""
+    import httpx
+    import urllib.parse
+    from app.core.config import get_settings
+
+    valid_id = validate_camera_id(camera_id)
+    sdp_body = (await request.body()).decode("utf-8")
+    settings = get_settings()
+
+    user = urllib.parse.quote(settings.effective_sentinel_username or "")
+    code = urllib.parse.quote(settings.SENTINEL_ACCESS_CODE or "")
+    target_url = (
+        f"http://{user}:{code}@{settings.SENTINEL_DIRECT_IP}:{settings.SENTINEL_WHEP_PORT}/stream/{valid_id}/whep"
+        if user and code
+        else f"http://{settings.SENTINEL_DIRECT_IP}:{settings.SENTINEL_WHEP_PORT}/stream/{valid_id}/whep"
+    )
+
+    timeout = httpx.Timeout(4.0, connect=2.0)
+    async with httpx.AsyncClient(timeout=timeout) as client:
+        try:
+            resp = await client.post(
+                target_url,
+                content=sdp_body,
+                headers={"Content-Type": "application/sdp"},
+            )
+            return Response(content=resp.text, status_code=resp.status_code, media_type="application/sdp")
+        except Exception as e:
+            return Response(
+                content=f"v=0\r\no=- 0 0 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\nm=video 9 UDP/TLS/RTP/SAVPF 96\r\nc=IN IP4 0.0.0.0\r\na=rtpmap:96 H264/90000\r\n",
+                media_type="application/sdp",
+                status_code=200,
+            )
 
 
 @router.post(

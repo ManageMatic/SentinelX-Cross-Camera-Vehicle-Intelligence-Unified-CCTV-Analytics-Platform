@@ -97,6 +97,19 @@ class CameraStreamSession:
         with self._lock:
             return self._latest_jpeg
 
+    async def mjpeg_generator(self):
+        """Generates continuous multipart JPEG stream for real-time browser playback."""
+        last_sent = None
+        while not self._stop_event.is_set():
+            jpeg = self.get_latest_jpeg()
+            if jpeg and jpeg != last_sent:
+                last_sent = jpeg
+                yield (
+                    b"--frame\r\n"
+                    b"Content-Type: image/jpeg\r\n\r\n" + jpeg + b"\r\n"
+                )
+            await asyncio.sleep(0.04)  # ~25 FPS
+
     def _run_loop(self):
         """Continuous video frame ingestion loop with exponential reconnect."""
         reconnect_attempt = 0
@@ -187,15 +200,14 @@ class CameraStreamSession:
         self.last_frame_time = now_utc
         self.total_frames_received += 1
 
-        # Encode JPEG for snapshot preview every ~10 frames or on demand
-        if sequence_number % 10 == 0 or self._latest_jpeg is None:
-            try:
-                ok, buf = cv2.imencode(".jpg", frame, [int(cv2.IMWRITE_JPEG_QUALITY), 75])
-                if ok:
-                    with self._lock:
-                        self._latest_jpeg = buf.tobytes()
-            except Exception:
-                pass
+        # Smooth JPEG encoding for real-time browser stream
+        try:
+            ok, buf = cv2.imencode(".jpg", frame, [int(cv2.IMWRITE_JPEG_QUALITY), 75])
+            if ok:
+                with self._lock:
+                    self._latest_jpeg = buf.tobytes()
+        except Exception:
+            pass
 
         video_frame = VideoFrame(
             camera_id=self.camera_id,
