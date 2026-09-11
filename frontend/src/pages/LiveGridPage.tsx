@@ -21,7 +21,7 @@ interface LiveGridPageProps {
 }
 
 export const LiveGridPage: React.FC<LiveGridPageProps> = ({ cameras }) => {
-  const [gridLayout, setGridLayout] = useState<'1x1' | '2x2' | '3x3' | '4x4'>('2x2');
+  const [gridLayout, setGridLayout] = useState<'1x1' | '2x2' | '3x3' | '4x4' | 'all'>('4x4');
   const [selectedCameraId, setSelectedCameraId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState<string>('ALL');
@@ -57,14 +57,11 @@ export const LiveGridPage: React.FC<LiveGridPageProps> = ({ cameras }) => {
     return matchesSearch && matchesDistrict;
   });
 
+  // In 1x1 view: show only 1 focused camera. In all other grid views: show all 30 cameras streaming!
   const displayedCameras =
     gridLayout === '1x1'
       ? filteredCameras.filter((c) => c.id === (selectedCameraId || filteredCameras[0]?.id)).slice(0, 1)
-      : gridLayout === '2x2'
-      ? filteredCameras.slice(0, 4)
-      : gridLayout === '3x3'
-      ? filteredCameras.slice(0, 9)
-      : filteredCameras.slice(0, 16);
+      : filteredCameras;
 
   const gridClass =
     gridLayout === '1x1'
@@ -73,7 +70,9 @@ export const LiveGridPage: React.FC<LiveGridPageProps> = ({ cameras }) => {
       ? 'grid-cols-1 sm:grid-cols-2'
       : gridLayout === '3x3'
       ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
-      : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4';
+      : gridLayout === '4x4'
+      ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
+      : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6';
 
   return (
     <div className="space-y-6">
@@ -87,7 +86,7 @@ export const LiveGridPage: React.FC<LiveGridPageProps> = ({ cameras }) => {
             </h1>
           </div>
           <p className="text-xs text-slate-400 mt-0.5 font-mono">
-            Gujarat Police Command & Control — Real-Time WHEP WebRTC Low-Latency Matrix
+            Gujarat Police Command & Control — Real-Time 30-Camera Ingestion Matrix
           </p>
         </div>
 
@@ -105,14 +104,14 @@ export const LiveGridPage: React.FC<LiveGridPageProps> = ({ cameras }) => {
             />
           </div>
 
-          {/* Grid Layout Switcher */}
+          {/* Grid Layout Switcher: All 30 Cameras across all multi-grid modes */}
           <div className="flex items-center bg-[#070b14] p-1 rounded-lg border border-slate-800 text-xs font-mono">
             <button
               onClick={() => setGridLayout('1x1')}
               className={`px-2.5 py-1 rounded flex items-center gap-1 transition-colors ${
                 gridLayout === '1x1' ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white'
               }`}
-              title="1x1 Full Focus View"
+              title="1x1 Full Focus View (1 Camera)"
             >
               <Maximize2 className="h-3 w-3" />
               1x1
@@ -122,7 +121,7 @@ export const LiveGridPage: React.FC<LiveGridPageProps> = ({ cameras }) => {
               className={`px-2.5 py-1 rounded flex items-center gap-1 transition-colors ${
                 gridLayout === '2x2' ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white'
               }`}
-              title="2x2 Quad Multi-Grid"
+              title="2 Columns (All 30 Cameras)"
             >
               <Grid2X2 className="h-3 w-3" />
               2x2
@@ -132,7 +131,7 @@ export const LiveGridPage: React.FC<LiveGridPageProps> = ({ cameras }) => {
               className={`px-2.5 py-1 rounded flex items-center gap-1 transition-colors ${
                 gridLayout === '3x3' ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white'
               }`}
-              title="3x3 9-Feed Matrix"
+              title="3 Columns (All 30 Cameras)"
             >
               <Grid3X3 className="h-3 w-3" />
               3x3
@@ -142,10 +141,20 @@ export const LiveGridPage: React.FC<LiveGridPageProps> = ({ cameras }) => {
               className={`px-2.5 py-1 rounded flex items-center gap-1 transition-colors ${
                 gridLayout === '4x4' ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white'
               }`}
-              title="4x4 Statewide Surveillance Wall (16 Feeds)"
+              title="4 Columns Wall (All 30 Cameras)"
             >
               <LayoutGrid className="h-3 w-3" />
               4x4
+            </button>
+            <button
+              onClick={() => setGridLayout('all')}
+              className={`px-2.5 py-1 rounded flex items-center gap-1 transition-colors ${
+                gridLayout === 'all' ? 'bg-emerald-600 text-white font-bold shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'text-slate-400 hover:text-white'
+              }`}
+              title="30 Cameras Command Center (6x5 Wall)"
+            >
+              <Radio className="h-3 w-3 text-emerald-300" />
+              30 (All)
             </button>
           </div>
 
