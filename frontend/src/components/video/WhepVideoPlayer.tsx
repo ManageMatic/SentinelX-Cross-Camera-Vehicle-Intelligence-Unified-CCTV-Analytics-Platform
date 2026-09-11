@@ -140,8 +140,8 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
     let step = 0;
 
     const vehicles = [
-      { id: 'GJ01AB1234', type: 'car', color: '#38bdf8', speed: 48, yPos: 0.55 },
-      { id: 'GJ27K8890', type: 'suv', color: '#10b981', speed: 54, yPos: 0.68 },
+      { id: 'GJ01AB1234', color: '#38bdf8', yPos: 0.55 },
+      { id: 'GJ27K8890', color: '#10b981', yPos: 0.68 },
     ];
 
     const render = () => {
@@ -174,33 +174,53 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
           ctx.lineTo(canvas.width, y);
           ctx.stroke();
         }
-      }
 
-      // Draw bounding boxes if overlay enabled
-      if (showAiOverlay) {
-        step += 0.015;
-        vehicles.forEach((v, idx) => {
-          const x = (Math.sin(step + idx * 1.5) * 0.35 + 0.5) * (canvas.width - 120);
-          const y = canvas.height * v.yPos;
-          const boxW = 100;
-          const boxH = 50;
+        // Draw animated simulated bounding boxes only in AI Canvas simulation mode
+        if (showAiOverlay) {
+          step += 0.015;
+          vehicles.forEach((v, idx) => {
+            const x = (Math.sin(step + idx * 1.5) * 0.35 + 0.5) * (canvas.width - 120);
+            const y = canvas.height * v.yPos;
+            const boxW = 100;
+            const boxH = 50;
 
-          // Box
-          ctx!.strokeStyle = v.color;
-          ctx!.lineWidth = 2;
-          ctx!.strokeRect(x, y, boxW, boxH);
+            // Box
+            ctx!.strokeStyle = v.color;
+            ctx!.lineWidth = 2;
+            ctx!.strokeRect(x, y, boxW, boxH);
 
-          // Fill tint
-          ctx!.fillStyle = `${v.color}22`;
-          ctx!.fillRect(x, y, boxW, boxH);
+            // Fill tint
+            ctx!.fillStyle = `${v.color}22`;
+            ctx!.fillRect(x, y, boxW, boxH);
 
-          // Label
-          ctx!.fillStyle = '#0f172a';
-          ctx!.fillRect(x, y - 18, 90, 18);
-          ctx!.fillStyle = v.color;
-          ctx!.font = 'bold 10px monospace';
-          ctx!.fillText(`${v.id} (98%)`, x + 4, y - 5);
-        });
+            // Label
+            ctx!.fillStyle = '#0f172a';
+            ctx!.fillRect(x, y - 18, 90, 18);
+            ctx!.fillStyle = v.color;
+            ctx!.font = 'bold 10px monospace';
+            ctx!.fillText(`${v.id} (98%)`, x + 4, y - 5);
+          });
+        }
+      } else if (hasActiveAlert && showAiOverlay) {
+        // In real live video mode, only draw tactical alert target box when an active hit exists
+        const alertBoxX = canvas.width * 0.42;
+        const alertBoxY = canvas.height * 0.52;
+        const alertW = 130;
+        const alertH = 65;
+
+        // Pulsing alert border
+        ctx.strokeStyle = '#f43f5e';
+        ctx.lineWidth = 2.5;
+        ctx.strokeRect(alertBoxX, alertBoxY, alertW, alertH);
+        ctx.fillStyle = 'rgba(244, 63, 94, 0.15)';
+        ctx.fillRect(alertBoxX, alertBoxY, alertW, alertH);
+
+        // Alert Header Tag
+        ctx.fillStyle = '#be123c';
+        ctx.fillRect(alertBoxX, alertBoxY - 20, alertW, 20);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 10px monospace';
+        ctx.fillText(`🚨 ${alertDetails || 'HOTLIST HIT'}`, alertBoxX + 6, alertBoxY - 6);
       }
 
       animId = requestAnimationFrame(render);
@@ -208,7 +228,7 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
 
     render();
     return () => cancelAnimationFrame(animId);
-  }, [showAiOverlay, streamMode]);
+  }, [showAiOverlay, streamMode, hasActiveAlert, alertDetails]);
 
   const handleCaptureSnapshot = () => {
     setSnapshotSuccess(true);
