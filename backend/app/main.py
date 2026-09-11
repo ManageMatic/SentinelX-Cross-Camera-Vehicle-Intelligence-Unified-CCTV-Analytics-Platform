@@ -97,6 +97,10 @@ async def root_version(request: Request):
 # Include v1 API router
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
+# Also mount /api/cameras directly for convenient root-level access
+from app.api.v1.cameras import router as cameras_router
+app.include_router(cameras_router, prefix="/api")
+
 
 if __name__ == "__main__":
     import uvicorn

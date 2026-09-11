@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgis/postgis:16-3.4
-    container_name: sentinelx-postgres
+    container_name: netra-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-sentinelx_user}
@@ -19,7 +19,7 @@ services:
 
   valkey:
     image: valkey/valkey:8-alpine
-    container_name: sentinelx-valkey
+    container_name: netra-valkey
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -33,7 +33,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: sentinelx-backend
+    container_name: netra-backend
     restart: unless-stopped
     depends_on:
       postgres:
@@ -43,7 +43,16 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://sentinelx_user:sentinelx_password@postgres:5432/sentinelx_db
       VALKEY_URL: redis://valkey:6379/0
-      SENTINEL_CATALOG_URL: ${SENTINEL_CATALOG_URL:-http://host.docker.internal:8000/api/ingest}
+      SENTINEL_RTSP_HOST: ${SENTINEL_RTSP_HOST:-103.250.160.189}
+      SENTINEL_RTSP_PORT: ${SENTINEL_RTSP_PORT:-8554}
+      SENTINEL_USERNAME: ${SENTINEL_USERNAME:-}
+      SENTINEL_ACCESS_CODE: ${SENTINEL_ACCESS_CODE:-}
+      SENTINEL_RTSP_TRANSPORT: ${SENTINEL_RTSP_TRANSPORT:-tcp}
+      SENTINEL_CONNECTION_TIMEOUT: ${SENTINEL_CONNECTION_TIMEOUT:-10000}
+      SENTINEL_RECONNECT_MAX_DELAY: ${SENTINEL_RECONNECT_MAX_DELAY:-30}
+      SENTINEL_CAMERA_PREFIX: ${SENTINEL_CAMERA_PREFIX:-cam}
+      SENTINEL_CAMERA_START: ${SENTINEL_CAMERA_START:-1}
+      SENTINEL_CAMERA_END: ${SENTINEL_CAMERA_END:-30}
       EVIDENCE_STORAGE_PATH: /app/data/evidence
     volumes:
       - ./data/evidence:/app/data/evidence
@@ -54,7 +63,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: sentinelx-frontend
+    container_name: netra-frontend
     restart: unless-stopped
     depends_on:
       - backend

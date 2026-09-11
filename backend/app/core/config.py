@@ -49,14 +49,22 @@ class Settings(BaseSettings):
     VALKEY_PORT: int = Field(default=6379, ge=1, le=65535)
     VALKEY_URL: str = "redis://localhost:6379/0"
 
-    # Sentinel Sandbox Ingestion Configuration
+    # Sentinel Sandbox & Authenticated RTSP Ingestion Configuration
+    SENTINEL_RTSP_HOST: str = "103.250.160.189"
+    SENTINEL_RTSP_PORT: int = Field(default=8554, ge=1, le=65535)
+    SENTINEL_USERNAME: Optional[str] = None
     SENTINEL_EMAIL: Optional[str] = None
     SENTINEL_ACCESS_CODE: Optional[str] = None
+    SENTINEL_RTSP_TRANSPORT: str = "tcp"
+    SENTINEL_CONNECTION_TIMEOUT: int = Field(default=10000, ge=100)  # ms
+    SENTINEL_RECONNECT_MAX_DELAY: int = Field(default=30, ge=1)  # seconds
+    SENTINEL_CAMERA_PREFIX: str = "cam"
+    SENTINEL_CAMERA_START: int = Field(default=1, ge=1)
+    SENTINEL_CAMERA_END: int = Field(default=30, ge=1)
     SENTINEL_BASE_URL: str = "https://cctv.corp8.cloud"
     SENTINEL_DIRECT_IP: str = "103.250.160.189"
     SENTINEL_CATALOG_URL: str = "https://cctv.corp8.cloud/cameras.json"
-    SENTINEL_HOST: str = "localhost"
-    SENTINEL_RTSP_PORT: int = Field(default=8554, ge=1, le=65535)
+    SENTINEL_HOST: str = "103.250.160.189"
     SENTINEL_WHEP_PORT: int = Field(default=8889, ge=1, le=65535)
     SENTINEL_HLS_PORT: int = Field(default=80, ge=1, le=65535)
     SENTINEL_SYNC_INTERVAL_SECONDS: int = Field(default=30, ge=1)
@@ -79,6 +87,11 @@ class Settings(BaseSettings):
 
     # CORS Configuration
     ALLOWED_ORIGINS: str = "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173"
+
+    @property
+    def effective_sentinel_username(self) -> Optional[str]:
+        """Return either SENTINEL_USERNAME or SENTINEL_EMAIL."""
+        return self.SENTINEL_USERNAME or self.SENTINEL_EMAIL
 
     @field_validator("AI_DEVICE")
     @classmethod
@@ -109,10 +122,15 @@ class Settings(BaseSettings):
             "POSTGRES_PASSWORD",
             "SECRET_KEY",
             "SENTINEL_ACCESS_CODE",
+            "SENTINEL_PASSWORD",
         }
         for key in sensitive_keys:
             if key in data and data[key]:
                 data[key] = "********"
+
+        # Mask username/email slightly for audit while hiding domain/secret
+        if "SENTINEL_ACCESS_CODE" in data and data["SENTINEL_ACCESS_CODE"]:
+            data["SENTINEL_ACCESS_CODE"] = "********"
 
         # Also mask password inside DATABASE_URL if present
         if "DATABASE_URL" in data and "@" in data["DATABASE_URL"] and ":" in data["DATABASE_URL"]:

@@ -805,26 +805,38 @@ export const DEMO_AUDIT_LOGS: AuditRecord[] = [
     ip_address: '10.20.1.45',
     status: 'SUCCESS',
   },
-  {
-    id: 'aud-02',
-    timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-    username: 'insp_patel',
-    role: 'STATE_ADMIN',
-    action: 'VEHICLE_CORRELATION_SEARCH',
-    resource_type: 'VehicleEvent',
-    resource_id: 'GJ01AB1234',
-    ip_address: '10.20.1.45',
-    status: 'SUCCESS',
-  },
-  {
-    id: 'aud-03',
-    timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-    username: 'ctrl_operator_02',
-    role: 'OPERATOR',
-    action: 'ALERT_ACKNOWLEDGE',
-    resource_type: 'Alert',
-    resource_id: 'alert-03',
-    ip_address: '10.20.1.62',
-    status: 'SUCCESS',
-  },
 ];
+
+// 10. Real Sentinel CCTV Ingestion & Diagnostics API
+export async function syncCameras(catalogUrl?: string): Promise<CameraSyncResult> {
+  const query = catalogUrl ? `?catalog_url=${encodeURIComponent(catalogUrl)}` : '';
+  return await request<CameraSyncResult>(`/api/cameras/sync${query}`, {
+    method: 'POST',
+  });
+}
+
+export async function testCameraConnection(cameraId: string): Promise<CameraTestResult> {
+  return await request<CameraTestResult>(`/api/cameras/${encodeURIComponent(cameraId)}/test`, {
+    method: 'POST',
+  });
+}
+
+export async function fetchCameraHealth(cameraId: string): Promise<CameraHealthLive> {
+  return await request<CameraHealthLive>(`/api/cameras/${encodeURIComponent(cameraId)}/health`);
+}
+
+export async function reconnectCamera(cameraId: string): Promise<{ camera_id: string; state: string }> {
+  return await request<{ camera_id: string; state: string }>(`/api/cameras/${encodeURIComponent(cameraId)}/reconnect`, {
+    method: 'POST',
+  });
+}
+
+export async function fetchCameras(): Promise<Camera[]> {
+  try {
+    const res = await request<Camera[]>('/api/cameras?page_size=100');
+    return res && Array.isArray(res) ? res : DEMO_CAMERAS;
+  } catch {
+    return DEMO_CAMERAS;
+  }
+}
+

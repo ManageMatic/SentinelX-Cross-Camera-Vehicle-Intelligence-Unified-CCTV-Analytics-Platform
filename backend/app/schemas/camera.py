@@ -147,6 +147,39 @@ class CameraDetailResponse(CameraResponse):
     latest_health: Optional[CameraHealthResponse] = None
 
 
+class CameraTestResult(BaseModel):
+    """Result of an on-demand RTSP connectivity test."""
+
+    camera_id: str
+    reachable: bool
+    first_frame_received: bool
+    codec: str = "h264"
+    width: int = 0
+    height: int = 0
+    fps: float = 0.0
+    latency_ms: float = 0.0
+    message: str
+
+
+class CameraHealthLiveResponse(BaseModel):
+    """Live streaming health and telemetry for an active camera stream."""
+
+    camera_id: str
+    is_online: bool
+    state: str
+    measured_fps: float
+    latency_ms: float
+    resolution_width: int
+    resolution_height: int
+    codec: str
+    reconnect_count: int
+    decoder_errors: int
+    total_frames_received: int
+    dropped_frames: int
+    last_frame_time: Optional[datetime] = None
+    last_error: Optional[str] = None
+
+
 class CameraSyncResult(BaseModel):
     """Summary of dynamic catalog ingestion sync operation."""
 
@@ -158,3 +191,4 @@ class CameraSyncResult(BaseModel):
     errors_count: int
     synced_at: datetime
     duration_ms: float
+

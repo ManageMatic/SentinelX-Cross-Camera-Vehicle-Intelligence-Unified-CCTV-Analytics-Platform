@@ -74,6 +74,46 @@ export interface SystemStats {
   avgProcessTimeMs: number;
 }
 
+export interface CameraTestResult {
+  camera_id: string;
+  reachable: boolean;
+  first_frame_received: boolean;
+  codec: string;
+  width: number;
+  height: number;
+  fps: number;
+  latency_ms: number;
+  message: string;
+}
+
+export interface CameraHealthLive {
+  camera_id: string;
+  is_online: boolean;
+  state: string;
+  measured_fps: number;
+  latency_ms: number;
+  resolution_width: number;
+  resolution_height: number;
+  codec: string;
+  reconnect_count: number;
+  decoder_errors: number;
+  total_frames_received: number;
+  dropped_frames: number;
+  last_frame_time?: string;
+  last_error?: string;
+}
+
+export interface CameraSyncResult {
+  catalog_url: string;
+  total_discovered: number;
+  added_count: number;
+  updated_count: number;
+  unchanged_count: number;
+  errors_count: number;
+  synced_at: string;
+  duration_ms: number;
+}
+
 export interface Camera {
   id: string;
   external_camera_id: string;

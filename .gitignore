@@ -41,6 +41,8 @@ frontend/build/
 
 # Environment Variables & Local Config
 .env
+.env.*
+!.env.example
 *.local
 .env.*.local
 

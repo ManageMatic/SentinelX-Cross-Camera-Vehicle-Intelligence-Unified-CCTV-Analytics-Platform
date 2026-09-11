@@ -1,25 +1,31 @@
-"""Camera Registry and Dynamic Ingestion API Endpoints."""
+"""Camera Registry, Live Streaming, Health Telemetry, and Testing Endpoints."""
 
 import math
 from typing import Optional
 
+from fastapi import APIRouter, Depends, Query, Response, status
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.exceptions import ResourceNotFoundException
 from app.db.session import get_db
+from app.integrations.sentinel.client import sentinel_client
+from app.integrations.sentinel.rtsp import validate_camera_id
 from app.models.camera import Camera, CameraHealth, CameraSource
 from app.schemas.camera import (
     CameraCreate,
     CameraDetailResponse,
+    CameraHealthLiveResponse,
     CameraHealthResponse,
     CameraResponse,
     CameraSourceResponse,
     CameraSyncResult,
+    CameraTestResult,
     CameraUpdate,
 )
 from app.schemas.common import APIResponse, PaginatedResponse, PaginationMetadata
 from app.services.camera_catalog import catalog_service
-from fastapi import APIRouter, Depends, Query, status
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
+from app.video.stream_manager import video_stream_manager
 
 router = APIRouter(prefix="/cameras", tags=["Camera Registry & Ingestion"])
 
@@ -87,6 +93,26 @@ async def list_cameras(
     )
 
 
+@router.post(
+    "/sync",
+    response_model=APIResponse[CameraSyncResult],
+    summary="Trigger dynamic discovery sync from Sentinel /api/ingest",
+)
+async def sync_catalog(
+    catalog_url: Optional[str] = Query(
+        None, description="Optional override URL for camera catalog ingestion"
+    ),
+    db: AsyncSession = Depends(get_db),
+):
+    """Synchronize camera feeds dynamically from Gujarat Police Sentinel Sandbox without hardcoding."""
+    sync_result = await catalog_service.sync_catalog_to_db(db=db, catalog_url=catalog_url)
+    return APIResponse(
+        success=True,
+        message="Dynamic camera catalog synchronization complete",
+        data=sync_result,
+    )
+
+
 @router.get(
     "/{camera_id}",
     response_model=APIResponse[CameraDetailResponse],
@@ -97,7 +123,12 @@ async def get_camera_detail(
     db: AsyncSession = Depends(get_db),
 ):
     """Retrieve camera metadata and active stream endpoints by internal UUID or external_camera_id."""
-    stmt = select(Camera).where((Camera.id == camera_id) | (Camera.external_camera_id == camera_id))
+    clean_id = camera_id.strip()
+    stmt = select(Camera).where(
+        (Camera.id == clean_id)
+        | (Camera.external_camera_id == clean_id)
+        | (Camera.external_camera_id.ilike(clean_id))
+    )
     result = await db.execute(stmt)
     camera = result.scalar_one_or_none()
 
@@ -149,23 +180,85 @@ async def get_camera_detail(
     )
 
 
-@router.post(
-    "/sync",
-    response_model=APIResponse[CameraSyncResult],
-    summary="Trigger dynamic discovery sync from Sentinel /api/ingest",
+@router.get(
+    "/{camera_id}/health",
+    response_model=APIResponse[CameraHealthLiveResponse],
+    summary="Get real-time health and telemetry metrics for a camera",
 )
-async def sync_catalog(
-    catalog_url: Optional[str] = Query(
-        None, description="Optional override URL for camera catalog ingestion"
-    ),
-    db: AsyncSession = Depends(get_db),
-):
-    """Synchronize camera feeds dynamically from Gujarat Police Sentinel Sandbox without hardcoding."""
-    sync_result = await catalog_service.sync_catalog_to_db(db=db, catalog_url=catalog_url)
+async def get_camera_health(camera_id: str):
+    """Retrieve live FPS, latency, reconnect counts, and decode errors for an active camera."""
+    valid_id = validate_camera_id(camera_id)
+    health_data = video_stream_manager.get_camera_health(valid_id)
     return APIResponse(
         success=True,
-        message="Dynamic camera catalog synchronization complete",
-        data=sync_result,
+        message="Camera health telemetry retrieved",
+        data=CameraHealthLiveResponse(**health_data),
+    )
+
+
+@router.post(
+    "/{camera_id}/test",
+    response_model=APIResponse[CameraTestResult],
+    summary="Test authenticated RTSP connectivity and first frame grab",
+)
+async def test_camera_connection(camera_id: str):
+    """Probes RTSP stream over TCP, extracts basic frame metadata, and verifies reachability."""
+    valid_id = validate_camera_id(camera_id)
+    test_result = await sentinel_client.test_camera(valid_id, timeout_seconds=5.0)
+    return APIResponse(
+        success=True,
+        message="Camera connection test completed",
+        data=CameraTestResult(**test_result),
+    )
+
+
+@router.get(
+    "/{camera_id}/preview",
+    summary="Get live JPEG snapshot preview of camera feed",
+)
+async def get_camera_preview(camera_id: str):
+    """Returns a single decoded JPEG snapshot with image/jpeg header."""
+    valid_id = validate_camera_id(camera_id)
+
+    # 1. Check active session cached frame
+    session = video_stream_manager.get_session(valid_id)
+    if session:
+        jpeg = session.get_latest_jpeg()
+        if jpeg:
+            return Response(content=jpeg, media_type="image/jpeg")
+
+    # 2. Try on-demand snapshot grab from RTSP
+    jpeg = await sentinel_client.fetch_snapshot(valid_id)
+    if jpeg:
+        return Response(content=jpeg, media_type="image/jpeg")
+
+    # 3. Fallback 1x1 transparent or placeholder JPEG
+    # Minimal 1x1 black JPEG header bytes
+    placeholder = (
+        b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x00H\x00H\x00\x00\xff\xdb\x00C\x00\x08\x06"
+        b"\x06\x07\x06\x05\x08\x07\x07\x07\t\t\x08\n\x0c\x14\r\x0c\x0b\x0b\x0c\x19\x12\x13\x0f"
+        b"\x14\x1d\x1a\x1f\x1e\x1d\x1a\x1c\x1c $.' \",#\x1c\x1c(7),01444\x1f'9=82<.342\xff\xc0"
+        b"\x00\x0b\x08\x00\x01\x00\x01\x01\x01\x11\x00\xff\xc4\x00\x1f\x00\x00\x01\x05\x01\x01"
+        b"\x01\x01\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x01\x02\x03\x04\x05\x06\x07\x08\t"
+        b"\n\x0b\xff\xda\x00\x08\x01\x01\x00\x00?\x00\xbf\x00\xff\xd9"
+    )
+    return Response(content=placeholder, media_type="image/jpeg")
+
+
+@router.post(
+    "/{camera_id}/reconnect",
+    response_model=APIResponse[dict],
+    summary="Force reconnect stream session for camera",
+)
+async def reconnect_camera(camera_id: str):
+    """Stops and restarts stream session for specified camera."""
+    valid_id = validate_camera_id(camera_id)
+    video_stream_manager.stop_session(valid_id)
+    session = video_stream_manager.get_or_create_session(valid_id)
+    return APIResponse(
+        success=True,
+        message=f"Reconnection triggered for camera {valid_id}",
+        data={"camera_id": valid_id, "state": session.state.value if hasattr(session.state, "value") else str(session.state)},
     )
 
 
@@ -180,7 +273,6 @@ async def create_camera(
     db: AsyncSession = Depends(get_db),
 ):
     """Manually onboard a CCTV camera feed into the registry."""
-    # Check if external_camera_id exists
     stmt = select(Camera).where(Camera.external_camera_id == payload.external_camera_id)
     result = await db.execute(stmt)
     if result.scalar_one_or_none():
@@ -190,7 +282,6 @@ async def create_camera(
     db.add(camera)
     await db.flush()
 
-    # Add main source
     source = CameraSource(
         camera_id=camera.id,
         stream_type="MAIN",
@@ -220,7 +311,12 @@ async def update_camera(
     db: AsyncSession = Depends(get_db),
 ):
     """Update camera configuration, AI activation flag, or coordinates."""
-    stmt = select(Camera).where((Camera.id == camera_id) | (Camera.external_camera_id == camera_id))
+    clean_id = camera_id.strip()
+    stmt = select(Camera).where(
+        (Camera.id == clean_id)
+        | (Camera.external_camera_id == clean_id)
+        | (Camera.external_camera_id.ilike(clean_id))
+    )
     result = await db.execute(stmt)
     camera = result.scalar_one_or_none()
 
