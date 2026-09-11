@@ -42,6 +42,7 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
   // Player State: 'live' (Real RTSP Ingestion), 'hls' (Cloud CDN), 'ai_canvas' (Simulation)
   const [streamMode, setStreamMode] = useState<'live' | 'hls' | 'ai_canvas'>('live');
   const [isPlayingLive, setIsPlayingLive] = useState(false);
+  const [isLiveLoaded, setIsLiveLoaded] = useState(false);
   const [streamError, setStreamError] = useState<string | null>(null);
   const [isMuted, setIsMuted] = useState(true);
   const [showAiOverlay, setShowAiOverlay] = useState(true);
@@ -303,17 +304,37 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
       <div className="relative aspect-video w-full bg-black overflow-hidden flex items-center justify-center">
         {/* Mode 1: Direct Live Stream (RTSP Real-time Stream from Backend Ingestion Engine) */}
         {streamMode === 'live' && (
-          <img
-            src={directStreamUrl}
-            alt={camera.name}
-            className="w-full h-full object-cover"
-            style={{
-              transform: `scale(${digitalZoom}) translate(${panX}px, ${panY}px)`,
-            }}
-            onError={() => {
-              setStreamError('Connecting to RTSP feed...');
-            }}
-          />
+          <>
+            <img
+              src={directStreamUrl}
+              alt={camera.name}
+              className={`w-full h-full object-cover transition-opacity duration-300 ${
+                isLiveLoaded ? 'opacity-100' : 'opacity-0'
+              }`}
+              style={{
+                transform: `scale(${digitalZoom}) translate(${panX}px, ${panY}px)`,
+              }}
+              onLoad={() => {
+                setIsLiveLoaded(true);
+                setStreamError(null);
+              }}
+              onError={() => {
+                setIsLiveLoaded(false);
+                setStreamError('Connecting to RTSP feed...');
+              }}
+            />
+
+            {/* Connecting Spinner for Live Mode */}
+            {!isLiveLoaded && !streamError && (
+              <div className="absolute inset-0 bg-[#070b14] flex flex-col items-center justify-center gap-2 z-10 text-xs font-mono text-slate-300">
+                <Radio className="h-5 w-5 text-blue-400 animate-spin-slow" />
+                <span className="font-bold text-white text-[11px]">
+                  Initializing RTSP feed ({camera.external_camera_id.toUpperCase()})...
+                </span>
+                <span className="text-[10px] text-slate-500 font-mono">103.250.160.189:8554 (TCP)</span>
+              </div>
+            )}
+          </>
         )}
 
         {/* Mode 2: HLS Video Player */}

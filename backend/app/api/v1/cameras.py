@@ -220,17 +220,25 @@ async def get_camera_preview(camera_id: str):
     """Returns a single decoded JPEG snapshot with image/jpeg header."""
     valid_id = validate_camera_id(camera_id)
 
-    # 1. Check active session cached frame
-    session = video_stream_manager.get_session(valid_id)
+    # 1. Check active session cached frame or initialize
+    session = video_stream_manager.get_or_create_session(valid_id)
     if session:
         jpeg = session.get_latest_jpeg()
         if jpeg:
-            return Response(content=jpeg, media_type="image/jpeg")
+            return Response(
+                content=jpeg,
+                media_type="image/jpeg",
+                headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
+            )
 
     # 2. Try on-demand snapshot grab from RTSP
     jpeg = await sentinel_client.fetch_snapshot(valid_id)
     if jpeg:
-        return Response(content=jpeg, media_type="image/jpeg")
+        return Response(
+            content=jpeg,
+            media_type="image/jpeg",
+            headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
+        )
 
     # 3. Fallback 1x1 transparent or placeholder JPEG
     # Minimal 1x1 black JPEG header bytes
