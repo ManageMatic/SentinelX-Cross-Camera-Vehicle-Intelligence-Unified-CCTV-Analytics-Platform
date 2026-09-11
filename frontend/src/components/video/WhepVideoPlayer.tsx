@@ -13,6 +13,7 @@ import {
   RefreshCw,
   ExternalLink,
   Zap,
+  Sparkles,
 } from 'lucide-react';
 import { Camera as CameraType } from '../../types';
 
@@ -47,11 +48,28 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
   const [isMuted, setIsMuted] = useState(true);
   const [showAiOverlay, setShowAiOverlay] = useState(true);
   const [showPtzGrid, setShowPtzGrid] = useState(false);
+  const [enhanceMode, setEnhanceMode] = useState<'hdr' | 'night' | 'sharpen' | 'color' | 'off'>('hdr');
   const [digitalZoom, setDigitalZoom] = useState(1.0);
   const [panX, setPanX] = useState(0);
   const [panY, setPanY] = useState(0);
   const [snapshotSuccess, setSnapshotSuccess] = useState(false);
   const [reconnectCount, setReconnectCount] = useState(0);
+
+  // Dynamic CSS filter for Real-time Video Clarity & Night-Vision Enhancement
+  const getEnhanceFilter = () => {
+    switch (enhanceMode) {
+      case 'hdr':
+        return 'contrast(1.35) brightness(1.15) saturate(1.4)';
+      case 'night':
+        return 'contrast(1.5) brightness(1.3) saturate(1.6) hue-rotate(5deg)';
+      case 'sharpen':
+        return 'contrast(1.8) brightness(1.1) grayscale(0.15)';
+      case 'color':
+        return 'saturate(2.2) contrast(1.3) brightness(1.15)';
+      default:
+        return 'none';
+    }
+  };
 
   // Format Official Sentinel Grid Stream URLs
   const camId = camera.external_camera_id.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -313,6 +331,7 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
               }`}
               style={{
                 transform: `scale(${digitalZoom}) translate(${panX}px, ${panY}px)`,
+                filter: getEnhanceFilter(),
               }}
               onLoad={() => {
                 setIsLiveLoaded(true);
@@ -348,6 +367,7 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
           autoPlay
           style={{
             transform: `scale(${digitalZoom}) translate(${panX}px, ${panY}px)`,
+            filter: getEnhanceFilter(),
           }}
         />
 
@@ -360,6 +380,19 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
             streamMode === 'ai_canvas' ? 'block' : 'block'
           }`}
         />
+
+        {/* Active Enhancement Mode Badge */}
+        {enhanceMode !== 'off' && (
+          <div className="absolute top-2 left-2 z-10 flex items-center gap-1 font-mono text-[9px] bg-amber-950/80 border border-amber-500/50 text-amber-300 px-1.5 py-0.5 rounded shadow">
+            <Sparkles className="h-2.5 w-2.5 text-amber-400 animate-pulse" />
+            <span className="font-bold uppercase tracking-wider">
+              {enhanceMode === 'hdr' && 'AI HDR'}
+              {enhanceMode === 'night' && 'NIGHT VISION'}
+              {enhanceMode === 'sharpen' && 'PLATE SHARPEN'}
+              {enhanceMode === 'color' && 'COLOR BOOST'}
+            </span>
+          </div>
+        )}
 
         {/* HLS Connection Info Overlay (Only if HLS selected and error occurs) */}
         {streamMode === 'hls' && !isPlayingLive && (
@@ -428,6 +461,30 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
 
         {/* Interactive Controls */}
         <div className="flex items-center gap-1">
+          {/* AI Forensic Quality Enhancement Mode Cycler */}
+          <button
+            onClick={() => {
+              const modes: Array<'hdr' | 'night' | 'sharpen' | 'color' | 'off'> = [
+                'hdr',
+                'night',
+                'sharpen',
+                'color',
+                'off',
+              ];
+              const nextIdx = (modes.indexOf(enhanceMode) + 1) % modes.length;
+              setEnhanceMode(modes[nextIdx]);
+            }}
+            className={`p-1.5 rounded transition-colors flex items-center gap-1 text-[10px] ${
+              enhanceMode !== 'off'
+                ? 'bg-amber-950 text-amber-300 border border-amber-600/60'
+                : 'text-slate-400 hover:bg-slate-800'
+            }`}
+            title={`Enhance Mode: ${enhanceMode.toUpperCase()} (Click to cycle HDR / Night Vision / Sharpen / Color / Off)`}
+          >
+            <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+            <span className="font-bold text-[9px] uppercase">{enhanceMode}</span>
+          </button>
+
           {/* Audio Mute Toggle */}
           <button
             onClick={() => setIsMuted(!isMuted)}

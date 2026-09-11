@@ -100,27 +100,32 @@ class ANPREngine:
 
     @staticmethod
     def preprocess_image(crop: np.ndarray, enable_clahe: bool = True) -> np.ndarray:
-        """Enhance low-light, nighttime, and blurred CCTV plate crops."""
+        """Enhance low-light, nighttime, and blurred CCTV plate crops with super-resolution & unsharp masking."""
         if crop is None or crop.size == 0:
             return crop
 
         # Convert to Grayscale
         gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY) if crop.ndim == 3 else crop
 
-        # Resize if crop is too small (upscale to at least 70px height)
+        # Upscale small or low-resolution crops (upscale to at least 90px height)
         h, w = gray.shape[:2]
-        if h < 70:
-            scale = 70.0 / max(1, h)
-            gray = cv2.resize(gray, (int(w * scale), 70), interpolation=cv2.INTER_CUBIC)
+        if h < 90:
+            scale = 90.0 / max(1, h)
+            gray = cv2.resize(gray, (int(w * scale), 90), interpolation=cv2.INTER_CUBIC)
 
         if enable_clahe:
-            # Contrast Limited Adaptive Histogram Equalization
-            clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8, 8))
+            # Contrast Limited Adaptive Histogram Equalization with optimized clip limit
+            clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
             gray = clahe.apply(gray)
 
         # Bilateral filter for noise reduction preserving crisp character edges
         denoised = cv2.bilateralFilter(gray, 9, 75, 75)
-        return denoised
+
+        # Unsharp masking to accentuate character boundaries
+        blurred = cv2.GaussianBlur(denoised, (0, 0), 2.0)
+        sharpened = cv2.addWeighted(denoised, 1.5, blurred, -0.5, 0)
+
+        return np.clip(sharpened, 0, 255).astype(np.uint8)
 
     @staticmethod
     def disambiguate_characters(raw_text: str) -> str:
