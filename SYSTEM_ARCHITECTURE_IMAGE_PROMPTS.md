@@ -1,107 +1,101 @@
-# NETRA-X: System Architecture & Workflow Image Generation Guide
-### Prepared for Gujarat Police Surveillance Command & GPIC-2026 AI CCTV Architecture
+# NETRA-X: Minimalist White-Background Architecture & Workflow Prompts
+### Designed for Clean Academic, Technical Documentation & ChatGPT Generation
 
-This document contains **ready-to-use prompts** designed for **ChatGPT (GPT-4o with DALL-E 3)**, **Midjourney**, or other AI image generators to create high-resolution, presentation-grade diagrams of the **NETRA-X Platform Architecture** and **End-to-End System Workflow**.
-
----
-
-## 🎨 Design Theme & Visual Styling Directives
-When generating images with ChatGPT, keep the following aesthetic directives in mind:
-- **Color Palette:** Tactical Dark Theme (`#070a12`), Neon Cyan (`#38bdf8`), Cyber Amber (`#f59e0b`), Emerald Green (`#10b981`), and Crimson Alert (`#f43f5e`).
-- **Style:** Futuristic Military/Law Enforcement Command Center Infographic, Isometric/Orthographic 3D Microservice Block Architecture, Glowing Data Pipelines, Holographic Glassmorphism.
-- **Aspect Ratio:** `16:9` (Widescreen Presentation).
+This document contains **minimalist, clean-style prompts** with a **pure white background** (no heavy cyberpunk or glowing graphics) suitable for software engineering reports, research papers, and technical presentations.
 
 ---
 
-## 🖼️ PROMPT 1: Complete System Architecture Diagram
+## 📄 PROMPT 1: Clean System Architecture Diagram (Minimalist White Background)
 
-Copy and paste the prompt below into ChatGPT:
+Copy and paste this prompt into **ChatGPT / DALL-E**:
 
 ```text
-Create a hyper-detailed, futuristic, professional 3D isometric system architecture infographic diagram for "NETRA-X: Cross-Camera Vehicle Intelligence & Unified CCTV Analytics Platform" designed for Gujarat Police Command Center.
+Create a clean, minimalist, professional 2D technical system architecture diagram on a pure solid white background for a software platform named "NETRA-X: Cross-Camera Vehicle Intelligence Platform".
 
-The diagram should be laid out on a dark navy/slate cyberpunk tactical background with glowing neon cyan, amber, and emerald accents, divided into 4 horizontal layers connected with flowing fiber-optic light pipelines:
+Visual Style: Flat vector style, clean rectangular boxes with thin borders, subtle pastel fills, clean directional arrows, high-contrast dark navy text, modern sans-serif typography, AWS/GCP technical architecture blueprint style. Zero heavy gradients, zero neon glow, pure white background (#ffffff).
 
-1. LAYER 1 (BOTTOM - INGESTION & CCTV STREAMS):
-   - "Gujarat Police CCTV Network": Icons for 30 live state CCTV junction cameras across Ahmedabad, Rajkot, Junagadh, Gandhinagar, Navsari.
-   - "Multi-Protocol Ingestion Gateway": RTSP/TCP, WebRTC WHEP, and HLS decoders connected to MediaMTX & OpenCV async stream pools.
+Layout (4 Vertical Stacked Layers from Top to Bottom):
 
-2. LAYER 2 (AI INFERENCE & VISION ENGINE):
-   - "Vehicle Detection Module": YOLOv8 Neural Network detecting sedans, SUVs, motorcycles, trucks with bounding boxes.
-   - "ANPR OCR Engine": Dual-stage License Plate Localizer and Character Recognition reading Indian high-security number plates.
-   - "Deep Re-ID Feature Extractor": OSNet embedding vectors (512-dim visual signatures for cross-camera trajectory tracking).
-   - "Visual Attribute Classifier": Color recognition and vehicle type taxonomy.
+1. TOP LAYER - Presentation & Command UI (Light Blue Boxes):
+   - "Live CCTV Matrix (30 Grid Streams)"
+   - "Tactical GIS Map (Leaflet Waypoint Tracking)"
+   - "Real-Time Hotlist Alert Panel"
+   - "Forensic Investigation Portal"
 
-3. LAYER 3 (DATA, CORRELATION & TAMPER-PROOF EVIDENCE VAULT):
-   - "Event Bus & Task Queue": Real-time spatial-temporal correlation engine.
-   - "Secure Storage & DB": SQLite / PostgreSQL vector database and Redis cache.
-   - "Immutable Evidence Vault": SHA-256 cryptographic chain-of-custody ledger with digital signatures for court-admissible evidence.
-   - "Real-time Hotlist Matcher": Sub-millisecond lookup against Stolen Vehicle / Wanted Gang databases.
+2. LAYER 2 - Core Application & Services (Light Slate Boxes):
+   - "FastAPI Backend Gateway"
+   - "Stream Proxy Manager (RTSP / WHEP / HLS)"
+   - "Spatial-Temporal Event Correlator"
+   - "Hotlist Matching Engine (<20ms Lookup)"
 
-4. LAYER 4 (TOP - TACTICAL COMMAND CENTER UI):
-   - "30-Feed Live Video Wall": Multi-grid CCTV matrix with AI HUD overlays and forensic controls.
-   - "GIS Tactical Map": Leaflet GIS showing vehicle journey paths, route replay, and junction heatmaps.
-   - "Real-Time Hotlist Alert Banner": Flashing red priority notifications with vehicle snapshots.
-   - "Forensic Investigation Portal": Cross-camera trajectory timeline and license plate search.
+3. LAYER 3 - AI Vision & Intelligence Pipeline (Light Emerald Boxes):
+   - "YOLOv8 Vehicle Detector (Cars, Bikes, Trucks)"
+   - "ANPR OCR Engine (License Plate Reader)"
+   - "OSNet Deep Re-ID (512-dim Visual Embeddings)"
+   - "Color & Attribute Classifier"
 
-Include high-tech holographic connectors, clean glowing microservice nodes, and subtle data particle streams. Text labels must be crisp, legible, and professional. 8k resolution, ultra-clean UI/UX vector infographic style.
+4. BOTTOM LAYER - Ingestion, Storage & Security (Light Amber Boxes):
+   - "30x Gujarat CCTV Junction Feeds"
+   - "PostgreSQL / SQLite Database"
+   - "Redis Cache & Event Bus"
+   - "SHA-256 Tamper-Proof Evidence Vault"
+
+Connect layers using clean gray dotted and solid directional arrows indicating data flow. Keep lines crisp, aligned, and uncluttered. 16:9 widescreen ratio, ultra-sharp vector diagram.
 ```
 
 ---
 
-## 🖼️ PROMPT 2: End-to-End System Workflow Diagram
+## 📄 PROMPT 2: Simple Step-by-Step Workflow Diagram (Minimalist White Background)
 
-Copy and paste the prompt below into ChatGPT:
+Copy and paste this prompt into **ChatGPT / DALL-E**:
 
 ```text
-Create a clean, modern, high-tech process flowchart and workflow infographic diagram for "NETRA-X Unified Vehicle Intelligence Pipeline".
+Create a simple, elegant 5-step horizontal process flowchart diagram on a solid pure white background for "NETRA-X CCTV Vehicle Tracking Workflow".
 
-The diagram should illustrate a 5-step horizontal sequential pipeline with glowing data flows on a dark tactical grid background (#0a0e17):
+Visual Style: Clean flat 2D infographic, simple numbered rectangular cards with soft gray borders, clear directional arrows connecting steps left-to-right, minimal icons, professional corporate tech design. No dark background, no glowing effects, pure white background (#ffffff).
 
-STEP 1: CCTV Ingestion & Decoding
-- Icon: CCTV Traffic Camera on Gujarat Highway.
-- Action: Raw 1080p RTSP video stream captured at 25 FPS -> Sanitized internal queue with drop-oldest backpressure.
+5 Horizontal Steps (Left to Right):
 
-STEP 2: Multi-Model AI Inference
-- Icon: Neural Network Processor / AI Brain.
-- Action: YOLOv8 vehicle detection + OCR License Plate Recognition (GJ01AB1234) + 512-dim OSNet visual Re-ID embedding generation.
+[STEP 1: CCTV Ingestion]
+- Subtext: Ingests 30 RTSP CCTV feeds at 25 FPS with drop-oldest frame queues.
 
-STEP 3: Spatial-Temporal Correlation & Hotlist Matching
-- Icon: Search Radar & Database Node.
-- Action: Querying active watchlist in <20ms -> Match found for Wanted Vehicle -> Cross-referencing timestamps and GPS coordinates across multiple junction cameras.
+    ⬇ (Arrow)
 
-STEP 4: SHA-256 Tamper-Proof Evidence Generation
-- Icon: Cryptographic Shield & Padlock.
-- Action: Exporting high-res snapshot with forensic metadata, operator audit log, and SHA-256 cryptographic hash seal for legal integrity.
+[STEP 2: Multi-Model AI Inference]
+- Subtext: YOLOv8 vehicle detection + OCR License Plate recognition + OSNet visual Re-ID embedding extraction.
 
-STEP 5: Command Center Dispatch & GIS Trajectory
-- Icon: Tactical Map & Siren Alert.
-- Action: Instant flashing red alert on Commander's 30-camera video wall, automated dispatch telemetry, and full vehicle journey route plotted on Gujarat GIS Leaflet map.
+    ⬇ (Arrow)
 
-Visual Style: Crisp futuristic law-enforcement tech infographic, glowing neon arrows connecting steps, sleek glassmorphic step cards, cyan and amber highlights, ultra-sharp vector graphics, 16:9 presentation slide format.
+[STEP 3: Watchlist Matching & Correlation]
+- Subtext: Instant check against Hotlist database and cross-camera time/GPS tracking.
+
+    ⬇ (Arrow)
+
+[STEP 4: SHA-256 Evidence Seal]
+- Subtext: Generates court-admissible forensic snapshot with SHA-256 cryptographic hash.
+
+    ⬇ (Arrow)
+
+[STEP 5: Command Alert & GIS Route Plot]
+- Subtext: Triggers visual alert banner and draws vehicle trajectory on tactical GIS map.
+
+Color Palette: Clean navy blue (#1e293b), soft slate (#64748b), and subtle blue/emerald accents on pure white background. Ultra-crisp, high-legibility text.
 ```
 
 ---
 
-## 🖼️ PROMPT 3: Combined Technical Architecture & Data Flow (Single Slide)
+## 📄 PROMPT 3: Combined Architecture & Data Flow (Single Clean Chart)
 
-Copy and paste the prompt below into ChatGPT:
+Copy and paste this prompt into **ChatGPT / DALL-E**:
 
 ```text
-Create a comprehensive technical architecture and data flow diagram for "NETRA-X AI Surveillance Platform".
+Create a clean, formal block diagram of "NETRA-X System Architecture & Data Flow" on a pure white background.
 
-Design layout:
-- Left Column: Data Sources (30 CCTV Streams, RTSP/WHEP/HLS, Gujarat Police Network).
-- Center Column: Processing Core (FastAPI Backend, YOLOv8 Vision Engine, ANPR Engine, Deep Re-ID OSNet, Hotlist Event Correlator).
-- Right Column: Storage & Security (PostgreSQL Vector DB, Redis Cache, SHA-256 Immutable Audit Vault).
-- Top Overlay: Client Presentation Layer (React 18 + TypeScript, 30-Feed Video Wall, Tactical Leaflet GIS Map, Instant Audio/Visual Alerts).
+Structure:
+- Left Box (Data Sources): 30 Gujarat Police CCTV Camera Feeds (RTSP / HLS).
+- Center Box (Processing Pipeline): FastAPI Core, YOLOv8 Vehicle Detection, ANPR License Plate OCR, Deep Re-ID Vector Matching.
+- Right Box (Storage & Security): Relational Database, Redis Cache, SHA-256 Tamper-Proof Audit Vault.
+- Top Box (User Interface): React Web Dashboard, 30-Feed Video Wall, Interactive Leaflet GIS Map.
 
-Theme: Dark mode police intelligence interface, glowing blue and amber circuit pathways, minimalist geometric nodes, crisp sans-serif typography, high contrast, clean presentation graphic.
+Style: Clean flat 2D corporate software architecture diagram, thin gray connector lines, simple labeled boxes, dark readable text, subtle blue and gray accents, pure white background.
 ```
-
----
-
-### 💡 Tips for Best Output from ChatGPT / DALL-E:
-1. Paste one prompt at a time into ChatGPT.
-2. If you want specific text highlights, tell ChatGPT: *"Ensure the title 'NETRA-X' and 'Gujarat Police' are prominently written in the header."*
-3. You can request variations such as *"Make the layout vertical for a 9:16 mobile/poster display"* or *"Render in 3D glassmorphic isometric style"*.
