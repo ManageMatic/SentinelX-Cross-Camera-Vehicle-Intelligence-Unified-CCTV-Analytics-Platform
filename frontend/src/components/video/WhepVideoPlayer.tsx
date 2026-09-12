@@ -40,7 +40,7 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const hlsInstanceRef = useRef<Hls | null>(null);
 
-  // Player State: 'live' (Real-Time RTSP Stream), 'hls' (Cloud CDN HLS), 'ai_canvas' (AI Simulation)
+  // Player State: 'live' (Real RTSP Video Feed), 'hls' (Cloud CDN Stream), 'ai_canvas' (AI Overlay)
   const [streamMode, setStreamMode] = useState<'live' | 'hls' | 'ai_canvas'>('live');
   const [isPlayingLive, setIsPlayingLive] = useState(false);
   const [isLiveLoaded, setIsLiveLoaded] = useState(false);
@@ -54,7 +54,6 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
   const [panY, setPanY] = useState(0);
   const [snapshotSuccess, setSnapshotSuccess] = useState(false);
   const [reconnectCount, setReconnectCount] = useState(0);
-  const [liveSnapshotUrl, setLiveSnapshotUrl] = useState<string>('');
 
   // Dynamic CSS filter for Real-time Video Clarity & Night-Vision Enhancement
   const getEnhanceFilter = () => {
@@ -73,27 +72,10 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
   };
 
   const camId = camera.external_camera_id.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const directStreamUrl = `/api/cameras/${camId}/stream?t=${reconnectCount}`;
   const hlsStreamUrl = `/cctv-hls/${camId}/index.m3u8`;
 
-  // Continuous live snapshot frame updater for Live RTSP mode
-  useEffect(() => {
-    let isMounted = true;
-    const fetchNextFrame = () => {
-      if (!isMounted) return;
-      const url = `/api/cameras/${camId}/preview?t=${Date.now()}`;
-      setLiveSnapshotUrl(url);
-    };
-
-    fetchNextFrame();
-    const interval = setInterval(fetchNextFrame, 350); // ~3 FPS smooth live preview without socket locking
-
-    return () => {
-      isMounted = false;
-      clearInterval(interval);
-    };
-  }, [camId, reconnectCount]);
-
-  // HLS stream handler when in HLS mode
+  // HLS stream handler when in Cloud HLS mode
   useEffect(() => {
     const video = videoRef.current;
     if (!video || streamMode !== 'hls') {
@@ -111,10 +93,6 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
         enableWorker: true,
         lowLatencyMode: true,
         backBufferLength: 10,
-        maxBufferLength: 15,
-        maxMaxBufferLength: 30,
-        liveSyncDurationCount: 3,
-        liveMaxLatencyDurationCount: 6,
       });
 
       hlsInstanceRef.current = hls;
@@ -129,21 +107,8 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
         video.play().catch(() => {});
       });
 
-      hls.on(Hls.Events.ERROR, (_event, data) => {
-        if (data.fatal) {
-          switch (data.type) {
-            case Hls.ErrorTypes.NETWORK_ERROR:
-              hls?.startLoad();
-              break;
-            case Hls.ErrorTypes.MEDIA_ERROR:
-              hls?.recoverMediaError();
-              break;
-            default:
-              setStreamError('Switching to Live RTSP mode...');
-              setStreamMode('live');
-              break;
-          }
-        }
+      hls.on(Hls.Events.ERROR, () => {
+        setStreamMode('live');
       });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
       video.src = hlsStreamUrl;
@@ -167,7 +132,7 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
     };
   }, [hlsStreamUrl, streamMode, reconnectCount]);
 
-  // AI Vehicle Bounding Box & Canvas HUD Animation
+  // Clean Canvas Overlay: Only renders when active alert occurs (No fake simulation lines)
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -180,69 +145,12 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
     if (!ctx) return;
 
     let animId: number;
-    let step = 0;
-
-    const vehicles = [
-      { id: 'GJ01AB1234', color: '#38bdf8', yPos: 0.55 },
-      { id: 'GJ27K8890', color: '#10b981', yPos: 0.68 },
-    ];
 
     const render = () => {
       if (!ctx || !canvas) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Render tactical HUD overlay
-      if (streamMode === 'ai_canvas' || !isLiveLoaded) {
-        ctx.fillStyle = '#060a14';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // Perspective grid lines
-        ctx.strokeStyle = 'rgba(30, 58, 138, 0.4)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(canvas.width * 0.5, canvas.height * 0.25);
-        ctx.lineTo(0, canvas.height);
-        ctx.moveTo(canvas.width * 0.5, canvas.height * 0.25);
-        ctx.lineTo(canvas.width, canvas.height);
-        ctx.moveTo(canvas.width * 0.5, canvas.height * 0.25);
-        ctx.lineTo(canvas.width * 0.35, canvas.height);
-        ctx.moveTo(canvas.width * 0.5, canvas.height * 0.25);
-        ctx.lineTo(canvas.width * 0.65, canvas.height);
-        ctx.stroke();
-
-        for (let y = canvas.height * 0.35; y < canvas.height; y += 45) {
-          ctx.beginPath();
-          ctx.moveTo(0, y);
-          ctx.lineTo(canvas.width, y);
-          ctx.stroke();
-        }
-      }
-
-      // Draw simulated bounding boxes
-      if ((streamMode === 'ai_canvas' || showAiOverlay) && isLiveLoaded) {
-        step += 0.015;
-        vehicles.forEach((v, idx) => {
-          const x = (Math.sin(step + idx * 1.5) * 0.35 + 0.5) * (canvas.width - 120);
-          const y = canvas.height * v.yPos;
-          const boxW = 100;
-          const boxH = 50;
-
-          ctx!.strokeStyle = v.color;
-          ctx!.lineWidth = 2;
-          ctx!.strokeRect(x, y, boxW, boxH);
-
-          ctx!.fillStyle = `${v.color}22`;
-          ctx!.fillRect(x, y, boxW, boxH);
-
-          ctx!.fillStyle = '#0f172a';
-          ctx!.fillRect(x, y - 18, 90, 18);
-          ctx!.fillStyle = v.color;
-          ctx!.font = 'bold 10px monospace';
-          ctx!.fillText(`${v.id} (98%)`, x + 4, y - 5);
-        });
-      }
-
-      // Draw critical hotlist hit target box
+      // Only draw real hotlist alert box if triggered
       if (hasActiveAlert && showAiOverlay) {
         const alertBoxX = canvas.width * 0.42;
         const alertBoxY = canvas.height * 0.52;
@@ -267,7 +175,7 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
 
     render();
     return () => cancelAnimationFrame(animId);
-  }, [showAiOverlay, streamMode, hasActiveAlert, alertDetails, isLiveLoaded]);
+  }, [showAiOverlay, hasActiveAlert, alertDetails]);
 
   const handleCaptureSnapshot = () => {
     setSnapshotSuccess(true);
@@ -279,7 +187,7 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
       className="relative flex flex-col bg-[#070b14] border border-slate-800 rounded-xl overflow-hidden group shadow-xl"
       style={{ height: height || 'auto' }}
     >
-      {/* Top Protocol Switcher Header */}
+      {/* Top Header */}
       <div className="bg-[#0a0f1d] px-3 py-1.5 border-b border-slate-800 flex items-center justify-between z-20 text-xs font-mono">
         <div className="flex items-center gap-2">
           <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
@@ -321,50 +229,28 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
           >
             Cloud HLS
           </button>
-
-          <button
-            onClick={() => {
-              setStreamMode('ai_canvas');
-              setStreamError(null);
-            }}
-            className={`px-2 py-0.5 rounded transition-all ${
-              streamMode === 'ai_canvas'
-                ? 'bg-emerald-600 text-white font-bold shadow-[0_0_8px_rgba(16,185,129,0.4)]'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            AI Sim
-          </button>
         </div>
       </div>
 
       {/* Main Video Viewport */}
       <div className="relative aspect-video w-full bg-black overflow-hidden flex items-center justify-center">
-        {/* Initializing / Connecting Feedback HUD */}
+        {/* Initializing Feedback Indicator while connecting */}
         {!isLiveLoaded && (
-          <div className="absolute inset-0 bg-[#070b14]/90 flex flex-col items-center justify-center gap-2 z-15 text-xs font-mono p-4 text-center">
-            <div className="relative flex items-center justify-center">
-              <Radio className="h-7 w-7 text-cyan-400 animate-pulse" />
-              <span className="animate-ping absolute inline-flex h-10 w-10 rounded-full border border-cyan-500/40 opacity-75" />
-            </div>
-            <div className="flex flex-col items-center gap-0.5">
-              <span className="font-bold text-white tracking-wider text-[11px] uppercase">
-                INITIALIZING FEED // {camera.external_camera_id.toUpperCase()}
-              </span>
-              <span className="text-[10px] text-cyan-300 font-mono truncate max-w-[200px]">
-                {camera.name}
-              </span>
-              <span className="text-[9px] text-slate-500">
-                Acquiring RTSP stream (103.250.160.189:8554)...
-              </span>
-            </div>
+          <div className="absolute inset-0 bg-[#070b14] flex flex-col items-center justify-center gap-2 z-10 text-xs font-mono text-slate-300">
+            <Radio className="h-6 w-6 text-blue-400 animate-pulse" />
+            <span className="font-bold text-white text-[11px] tracking-wide">
+              INITIALIZING LIVE FEED // {camera.external_camera_id.toUpperCase()}
+            </span>
+            <span className="text-[10px] text-slate-400 font-mono truncate max-w-[220px]">
+              {camera.location_name}
+            </span>
           </div>
         )}
 
-        {/* Mode 1: Live RTSP Snapshot Stream */}
+        {/* Mode 1: Direct Live Stream from RTSP Ingestion Pipeline */}
         {streamMode === 'live' && (
           <img
-            src={liveSnapshotUrl}
+            src={directStreamUrl}
             alt={camera.name}
             className={`w-full h-full object-cover transition-opacity duration-300 ${
               isLiveLoaded ? 'opacity-100' : 'opacity-0'
@@ -378,7 +264,7 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
               setStreamError(null);
             }}
             onError={() => {
-              // Frame acquiring
+              setIsLiveLoaded(false);
             }}
           />
         )}
@@ -398,12 +284,12 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
           />
         )}
 
-        {/* Mode 3: AI Simulation Canvas */}
+        {/* Clean Transparent Canvas for Real Alert Box Overlay */}
         <canvas
           ref={canvasRef}
           width={640}
           height={360}
-          className="absolute inset-0 w-full h-full pointer-events-none z-10 block"
+          className="absolute inset-0 w-full h-full pointer-events-none z-10"
         />
 
         {/* PTZ Crosshair Grid */}
@@ -438,7 +324,7 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
         )}
       </div>
 
-      {/* Bottom Tactical Controls & PTZ Bar */}
+      {/* Bottom Tactical Controls Bar */}
       <div className="bg-[#090e1a] px-3 py-2 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2 z-20 font-mono text-xs text-slate-300">
         <div className="flex items-center gap-2 text-[11px]">
           <span className="text-slate-400 truncate max-w-[160px]">{camera.location_name}</span>
@@ -446,7 +332,7 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
 
         {/* Interactive Controls */}
         <div className="flex items-center gap-1">
-          {/* AI Forensic Quality Enhancement Mode Cycler */}
+          {/* AI Forensic Enhancement Mode Cycler */}
           <button
             onClick={() => {
               const modes: Array<'hdr' | 'night' | 'sharpen' | 'color' | 'off'> = [
@@ -485,7 +371,7 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
             className={`p-1.5 rounded transition-colors ${
               showAiOverlay ? 'bg-emerald-950 text-emerald-400' : 'text-slate-400 hover:bg-slate-800'
             }`}
-            title="Toggle AI OCR Bounding Box Overlays"
+            title="Toggle AI Target Bounding Boxes"
           >
             <Layers className="h-3.5 w-3.5" />
           </button>
