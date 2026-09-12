@@ -40,8 +40,8 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const hlsInstanceRef = useRef<Hls | null>(null);
 
-  // Player State: 'hls' (Primary High-Performance Video Stream), 'live' (RTSP Snapshot Preview), 'ai_canvas' (Simulation)
-  const [streamMode, setStreamMode] = useState<'hls' | 'live' | 'ai_canvas'>('hls');
+  // Player State: 'live' (Real-Time RTSP Stream), 'hls' (Cloud CDN HLS), 'ai_canvas' (AI Simulation)
+  const [streamMode, setStreamMode] = useState<'live' | 'hls' | 'ai_canvas'>('live');
   const [isPlayingLive, setIsPlayingLive] = useState(false);
   const [isLiveLoaded, setIsLiveLoaded] = useState(false);
   const [streamError, setStreamError] = useState<string | null>(null);
@@ -72,11 +72,28 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
     }
   };
 
-  // Format Official Sentinel Grid Stream URLs (Proxied through Vite / Backend to eliminate CORS)
   const camId = camera.external_camera_id.toLowerCase().replace(/[^a-z0-9]/g, '');
   const hlsStreamUrl = `/cctv-hls/${camId}/index.m3u8`;
 
-  // Initialize HLS.js or Native Video Stream for continuous non-blocking video playback
+  // Continuous live snapshot frame updater for Live RTSP mode
+  useEffect(() => {
+    let isMounted = true;
+    const fetchNextFrame = () => {
+      if (!isMounted) return;
+      const url = `/api/cameras/${camId}/preview?t=${Date.now()}`;
+      setLiveSnapshotUrl(url);
+    };
+
+    fetchNextFrame();
+    const interval = setInterval(fetchNextFrame, 350); // ~3 FPS smooth live preview without socket locking
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [camId, reconnectCount]);
+
+  // HLS stream handler when in HLS mode
   useEffect(() => {
     const video = videoRef.current;
     if (!video || streamMode !== 'hls') {
@@ -106,6 +123,7 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         setIsPlayingLive(true);
+        setIsLiveLoaded(true);
         setStreamError(null);
         video.muted = true;
         video.play().catch(() => {});
@@ -115,19 +133,14 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
         if (data.fatal) {
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
-              // Automatic seamless recovery
               hls?.startLoad();
               break;
             case Hls.ErrorTypes.MEDIA_ERROR:
               hls?.recoverMediaError();
               break;
             default:
-              setStreamError('Reconnecting video feed...');
-              setTimeout(() => {
-                if (hlsInstanceRef.current) {
-                  hlsInstanceRef.current.loadSource(hlsStreamUrl);
-                }
-              }, 2000);
+              setStreamError('Switching to Live RTSP mode...');
+              setStreamMode('live');
               break;
           }
         }
@@ -137,11 +150,12 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
       video.muted = true;
       video.addEventListener('loadedmetadata', () => {
         setIsPlayingLive(true);
+        setIsLiveLoaded(true);
         setStreamError(null);
         video.play().catch(() => {});
       });
       video.addEventListener('error', () => {
-        setStreamError('HLS stream recovery...');
+        setStreamMode('live');
       });
     }
 
@@ -153,27 +167,7 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
     };
   }, [hlsStreamUrl, streamMode, reconnectCount]);
 
-  // Periodic Snapshot Preview Loop for Live RTSP mode without blocking HTTP/1.1 socket pool
-  useEffect(() => {
-    if (streamMode !== 'live') return;
-
-    let isMounted = true;
-    const updateSnapshot = () => {
-      if (!isMounted) return;
-      const url = `/api/cameras/${camId}/preview?t=${Date.now()}`;
-      setLiveSnapshotUrl(url);
-    };
-
-    updateSnapshot();
-    const interval = setInterval(updateSnapshot, 1000);
-
-    return () => {
-      isMounted = false;
-      clearInterval(interval);
-    };
-  }, [camId, streamMode, reconnectCount]);
-
-  // AI Vehicle Bounding Box & Canvas Animation
+  // AI Vehicle Bounding Box & Canvas HUD Animation
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -197,15 +191,15 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
       if (!ctx || !canvas) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      if (streamMode === 'ai_canvas') {
-        // Render Dark Tactical Perspective Grid in AI Canvas Simulation mode
+      // Render tactical HUD overlay
+      if (streamMode === 'ai_canvas' || !isLiveLoaded) {
         ctx.fillStyle = '#060a14';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+        // Perspective grid lines
         ctx.strokeStyle = 'rgba(30, 58, 138, 0.4)';
         ctx.lineWidth = 1;
         ctx.beginPath();
-        // Road vanishing perspective lines
         ctx.moveTo(canvas.width * 0.5, canvas.height * 0.25);
         ctx.lineTo(0, canvas.height);
         ctx.moveTo(canvas.width * 0.5, canvas.height * 0.25);
@@ -216,55 +210,51 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
         ctx.lineTo(canvas.width * 0.65, canvas.height);
         ctx.stroke();
 
-        // Cross street horizontal grid lines
         for (let y = canvas.height * 0.35; y < canvas.height; y += 45) {
           ctx.beginPath();
           ctx.moveTo(0, y);
           ctx.lineTo(canvas.width, y);
           ctx.stroke();
         }
+      }
 
-        // Draw animated simulated bounding boxes only in AI Canvas simulation mode
-        if (showAiOverlay) {
-          step += 0.015;
-          vehicles.forEach((v, idx) => {
-            const x = (Math.sin(step + idx * 1.5) * 0.35 + 0.5) * (canvas.width - 120);
-            const y = canvas.height * v.yPos;
-            const boxW = 100;
-            const boxH = 50;
+      // Draw simulated bounding boxes
+      if ((streamMode === 'ai_canvas' || showAiOverlay) && isLiveLoaded) {
+        step += 0.015;
+        vehicles.forEach((v, idx) => {
+          const x = (Math.sin(step + idx * 1.5) * 0.35 + 0.5) * (canvas.width - 120);
+          const y = canvas.height * v.yPos;
+          const boxW = 100;
+          const boxH = 50;
 
-            // Box
-            ctx!.strokeStyle = v.color;
-            ctx!.lineWidth = 2;
-            ctx!.strokeRect(x, y, boxW, boxH);
+          ctx!.strokeStyle = v.color;
+          ctx!.lineWidth = 2;
+          ctx!.strokeRect(x, y, boxW, boxH);
 
-            // Fill tint
-            ctx!.fillStyle = `${v.color}22`;
-            ctx!.fillRect(x, y, boxW, boxH);
+          ctx!.fillStyle = `${v.color}22`;
+          ctx!.fillRect(x, y, boxW, boxH);
 
-            // Label
-            ctx!.fillStyle = '#0f172a';
-            ctx!.fillRect(x, y - 18, 90, 18);
-            ctx!.fillStyle = v.color;
-            ctx!.font = 'bold 10px monospace';
-            ctx!.fillText(`${v.id} (98%)`, x + 4, y - 5);
-          });
-        }
-      } else if (hasActiveAlert && showAiOverlay) {
-        // In real live video mode, only draw tactical alert target box when an active hit exists
+          ctx!.fillStyle = '#0f172a';
+          ctx!.fillRect(x, y - 18, 90, 18);
+          ctx!.fillStyle = v.color;
+          ctx!.font = 'bold 10px monospace';
+          ctx!.fillText(`${v.id} (98%)`, x + 4, y - 5);
+        });
+      }
+
+      // Draw critical hotlist hit target box
+      if (hasActiveAlert && showAiOverlay) {
         const alertBoxX = canvas.width * 0.42;
         const alertBoxY = canvas.height * 0.52;
         const alertW = 130;
         const alertH = 65;
 
-        // Pulsing alert border
         ctx.strokeStyle = '#f43f5e';
         ctx.lineWidth = 2.5;
         ctx.strokeRect(alertBoxX, alertBoxY, alertW, alertH);
         ctx.fillStyle = 'rgba(244, 63, 94, 0.15)';
         ctx.fillRect(alertBoxX, alertBoxY, alertW, alertH);
 
-        // Alert Header Tag
         ctx.fillStyle = '#be123c';
         ctx.fillRect(alertBoxX, alertBoxY - 20, alertW, 20);
         ctx.fillStyle = '#ffffff';
@@ -277,7 +267,7 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
 
     render();
     return () => cancelAnimationFrame(animId);
-  }, [showAiOverlay, streamMode, hasActiveAlert, alertDetails]);
+  }, [showAiOverlay, streamMode, hasActiveAlert, alertDetails, isLiveLoaded]);
 
   const handleCaptureSnapshot = () => {
     setSnapshotSuccess(true);
@@ -305,31 +295,31 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
         <div className="flex items-center gap-1 bg-[#050811] p-0.5 rounded-lg border border-slate-800 text-[10px]">
           <button
             onClick={() => {
-              setStreamMode('hls');
-              setStreamError(null);
-            }}
-            className={`px-2 py-0.5 rounded transition-all flex items-center gap-1 ${
-              streamMode === 'hls'
-                ? 'bg-blue-600 text-white font-bold shadow-[0_0_8px_rgba(37,99,235,0.4)]'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Zap className="h-2.5 w-2.5 text-amber-300" />
-            Live Video
-          </button>
-
-          <button
-            onClick={() => {
               setStreamMode('live');
               setStreamError(null);
             }}
-            className={`px-2 py-0.5 rounded transition-all ${
+            className={`px-2 py-0.5 rounded transition-all flex items-center gap-1 ${
               streamMode === 'live'
                 ? 'bg-blue-600 text-white font-bold shadow-[0_0_8px_rgba(37,99,235,0.4)]'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            RTSP Snaps
+            <Zap className="h-2.5 w-2.5 text-amber-300" />
+            Live RTSP
+          </button>
+
+          <button
+            onClick={() => {
+              setStreamMode('hls');
+              setStreamError(null);
+            }}
+            className={`px-2 py-0.5 rounded transition-all ${
+              streamMode === 'hls'
+                ? 'bg-blue-600 text-white font-bold shadow-[0_0_8px_rgba(37,99,235,0.4)]'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Cloud HLS
           </button>
 
           <button
@@ -350,7 +340,50 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
 
       {/* Main Video Viewport */}
       <div className="relative aspect-video w-full bg-black overflow-hidden flex items-center justify-center">
-        {/* Mode 1: High-Performance Live HLS Video Stream (Plays smoothly across all 30 cameras) */}
+        {/* Initializing / Connecting Feedback HUD */}
+        {!isLiveLoaded && (
+          <div className="absolute inset-0 bg-[#070b14]/90 flex flex-col items-center justify-center gap-2 z-15 text-xs font-mono p-4 text-center">
+            <div className="relative flex items-center justify-center">
+              <Radio className="h-7 w-7 text-cyan-400 animate-pulse" />
+              <span className="animate-ping absolute inline-flex h-10 w-10 rounded-full border border-cyan-500/40 opacity-75" />
+            </div>
+            <div className="flex flex-col items-center gap-0.5">
+              <span className="font-bold text-white tracking-wider text-[11px] uppercase">
+                INITIALIZING FEED // {camera.external_camera_id.toUpperCase()}
+              </span>
+              <span className="text-[10px] text-cyan-300 font-mono truncate max-w-[200px]">
+                {camera.name}
+              </span>
+              <span className="text-[9px] text-slate-500">
+                Acquiring RTSP stream (103.250.160.189:8554)...
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Mode 1: Live RTSP Snapshot Stream */}
+        {streamMode === 'live' && (
+          <img
+            src={liveSnapshotUrl}
+            alt={camera.name}
+            className={`w-full h-full object-cover transition-opacity duration-300 ${
+              isLiveLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
+            style={{
+              transform: `scale(${digitalZoom}) translate(${panX}px, ${panY}px)`,
+              filter: getEnhanceFilter(),
+            }}
+            onLoad={() => {
+              setIsLiveLoaded(true);
+              setStreamError(null);
+            }}
+            onError={() => {
+              // Frame acquiring
+            }}
+          />
+        )}
+
+        {/* Mode 2: HLS Video Player */}
         {streamMode === 'hls' && (
           <video
             ref={videoRef}
@@ -365,36 +398,12 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
           />
         )}
 
-        {/* Mode 2: Live RTSP Snapshot Mode (Periodic refresh without browser socket exhaustion) */}
-        {streamMode === 'live' && (
-          <img
-            src={liveSnapshotUrl}
-            alt={camera.name}
-            className={`w-full h-full object-cover transition-opacity duration-300 ${
-              isLiveLoaded ? 'opacity-100' : 'opacity-90'
-            }`}
-            style={{
-              transform: `scale(${digitalZoom}) translate(${panX}px, ${panY}px)`,
-              filter: getEnhanceFilter(),
-            }}
-            onLoad={() => {
-              setIsLiveLoaded(true);
-              setStreamError(null);
-            }}
-            onError={() => {
-              setStreamError('Connecting RTSP session...');
-            }}
-          />
-        )}
-
-        {/* Mode 3: AI Simulation Synthetic Canvas Overlay */}
+        {/* Mode 3: AI Simulation Canvas */}
         <canvas
           ref={canvasRef}
           width={640}
           height={360}
-          className={`absolute inset-0 w-full h-full pointer-events-none z-10 ${
-            streamMode === 'ai_canvas' ? 'block' : 'block'
-          }`}
+          className="absolute inset-0 w-full h-full pointer-events-none z-10 block"
         />
 
         {/* PTZ Crosshair Grid */}
