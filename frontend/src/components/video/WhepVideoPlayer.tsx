@@ -40,8 +40,8 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const hlsInstanceRef = useRef<Hls | null>(null);
 
-  // Player State: 'live' (Real RTSP Ingestion), 'hls' (Cloud CDN), 'ai_canvas' (Simulation)
-  const [streamMode, setStreamMode] = useState<'live' | 'hls' | 'ai_canvas'>('live');
+  // Player State: 'hls' (Primary High-Performance Video Stream), 'live' (RTSP Snapshot Preview), 'ai_canvas' (Simulation)
+  const [streamMode, setStreamMode] = useState<'hls' | 'live' | 'ai_canvas'>('hls');
   const [isPlayingLive, setIsPlayingLive] = useState(false);
   const [isLiveLoaded, setIsLiveLoaded] = useState(false);
   const [streamError, setStreamError] = useState<string | null>(null);
@@ -54,6 +54,7 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
   const [panY, setPanY] = useState(0);
   const [snapshotSuccess, setSnapshotSuccess] = useState(false);
   const [reconnectCount, setReconnectCount] = useState(0);
+  const [liveSnapshotUrl, setLiveSnapshotUrl] = useState<string>('');
 
   // Dynamic CSS filter for Real-time Video Clarity & Night-Vision Enhancement
   const getEnhanceFilter = () => {
@@ -71,12 +72,11 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
     }
   };
 
-  // Format Official Sentinel Grid Stream URLs
+  // Format Official Sentinel Grid Stream URLs (Proxied through Vite / Backend to eliminate CORS)
   const camId = camera.external_camera_id.toLowerCase().replace(/[^a-z0-9]/g, '');
-  const hlsStreamUrl = camera.hls_url || `https://cctv.corp8.cloud/${camId}/index.m3u8`;
-  const directStreamUrl = `/api/cameras/${camId}/stream?t=${reconnectCount}`;
+  const hlsStreamUrl = `/cctv-hls/${camId}/index.m3u8`;
 
-  // Initialize HLS.js or Native Video Stream when in HLS mode
+  // Initialize HLS.js or Native Video Stream for continuous non-blocking video playback
   useEffect(() => {
     const video = videoRef.current;
     if (!video || streamMode !== 'hls') {
@@ -93,7 +93,11 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
       hls = new Hls({
         enableWorker: true,
         lowLatencyMode: true,
-        backBufferLength: 30,
+        backBufferLength: 10,
+        maxBufferLength: 15,
+        maxMaxBufferLength: 30,
+        liveSyncDurationCount: 3,
+        liveMaxLatencyDurationCount: 6,
       });
 
       hlsInstanceRef.current = hls;
@@ -103,6 +107,7 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         setIsPlayingLive(true);
         setStreamError(null);
+        video.muted = true;
         video.play().catch(() => {});
       });
 
@@ -110,28 +115,33 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
         if (data.fatal) {
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
-              setStreamError('Network/CORS error on cctv.corp8.cloud');
+              // Automatic seamless recovery
               hls?.startLoad();
               break;
             case Hls.ErrorTypes.MEDIA_ERROR:
-              setStreamError('Media decoding recovery in progress...');
               hls?.recoverMediaError();
               break;
             default:
-              setStreamError('HLS stream offline. Switch to Live RTSP.');
+              setStreamError('Reconnecting video feed...');
+              setTimeout(() => {
+                if (hlsInstanceRef.current) {
+                  hlsInstanceRef.current.loadSource(hlsStreamUrl);
+                }
+              }, 2000);
               break;
           }
         }
       });
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
       video.src = hlsStreamUrl;
+      video.muted = true;
       video.addEventListener('loadedmetadata', () => {
         setIsPlayingLive(true);
         setStreamError(null);
         video.play().catch(() => {});
       });
       video.addEventListener('error', () => {
-        setStreamError('HLS stream error');
+        setStreamError('HLS stream recovery...');
       });
     }
 
@@ -142,6 +152,26 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
       }
     };
   }, [hlsStreamUrl, streamMode, reconnectCount]);
+
+  // Periodic Snapshot Preview Loop for Live RTSP mode without blocking HTTP/1.1 socket pool
+  useEffect(() => {
+    if (streamMode !== 'live') return;
+
+    let isMounted = true;
+    const updateSnapshot = () => {
+      if (!isMounted) return;
+      const url = `/api/cameras/${camId}/preview?t=${Date.now()}`;
+      setLiveSnapshotUrl(url);
+    };
+
+    updateSnapshot();
+    const interval = setInterval(updateSnapshot, 1000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [camId, streamMode, reconnectCount]);
 
   // AI Vehicle Bounding Box & Canvas Animation
   useEffect(() => {
@@ -275,31 +305,31 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
         <div className="flex items-center gap-1 bg-[#050811] p-0.5 rounded-lg border border-slate-800 text-[10px]">
           <button
             onClick={() => {
-              setStreamMode('live');
-              setStreamError(null);
-            }}
-            className={`px-2 py-0.5 rounded transition-all flex items-center gap-1 ${
-              streamMode === 'live'
-                ? 'bg-blue-600 text-white font-bold shadow-[0_0_8px_rgba(37,99,235,0.4)]'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Zap className="h-2.5 w-2.5 text-amber-300" />
-            Live RTSP
-          </button>
-
-          <button
-            onClick={() => {
               setStreamMode('hls');
               setStreamError(null);
             }}
-            className={`px-2 py-0.5 rounded transition-all ${
+            className={`px-2 py-0.5 rounded transition-all flex items-center gap-1 ${
               streamMode === 'hls'
                 ? 'bg-blue-600 text-white font-bold shadow-[0_0_8px_rgba(37,99,235,0.4)]'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            Cloud HLS
+            <Zap className="h-2.5 w-2.5 text-amber-300" />
+            Live Video
+          </button>
+
+          <button
+            onClick={() => {
+              setStreamMode('live');
+              setStreamError(null);
+            }}
+            className={`px-2 py-0.5 rounded transition-all ${
+              streamMode === 'live'
+                ? 'bg-blue-600 text-white font-bold shadow-[0_0_8px_rgba(37,99,235,0.4)]'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            RTSP Snaps
           </button>
 
           <button
@@ -320,106 +350,52 @@ export const WhepVideoPlayer: React.FC<WhepVideoPlayerProps> = ({
 
       {/* Main Video Viewport */}
       <div className="relative aspect-video w-full bg-black overflow-hidden flex items-center justify-center">
-        {/* Mode 1: Direct Live Stream (RTSP Real-time Stream from Backend Ingestion Engine) */}
-        {streamMode === 'live' && (
-          <>
-            <img
-              src={directStreamUrl}
-              alt={camera.name}
-              className={`w-full h-full object-cover transition-opacity duration-300 ${
-                isLiveLoaded ? 'opacity-100' : 'opacity-0'
-              }`}
-              style={{
-                transform: `scale(${digitalZoom}) translate(${panX}px, ${panY}px)`,
-                filter: getEnhanceFilter(),
-              }}
-              onLoad={() => {
-                setIsLiveLoaded(true);
-                setStreamError(null);
-              }}
-              onError={() => {
-                setIsLiveLoaded(false);
-                setStreamError('Connecting to RTSP feed...');
-              }}
-            />
-
-            {/* Connecting Spinner for Live Mode */}
-            {!isLiveLoaded && !streamError && (
-              <div className="absolute inset-0 bg-[#070b14] flex flex-col items-center justify-center gap-2 z-10 text-xs font-mono text-slate-300">
-                <Radio className="h-5 w-5 text-blue-400 animate-spin-slow" />
-                <span className="font-bold text-white text-[11px]">
-                  Initializing RTSP feed ({camera.external_camera_id.toUpperCase()})...
-                </span>
-                <span className="text-[10px] text-slate-500 font-mono">103.250.160.189:8554 (TCP)</span>
-              </div>
-            )}
-          </>
+        {/* Mode 1: High-Performance Live HLS Video Stream (Plays smoothly across all 30 cameras) */}
+        {streamMode === 'hls' && (
+          <video
+            ref={videoRef}
+            className="w-full h-full object-cover"
+            style={{
+              transform: `scale(${digitalZoom}) translate(${panX}px, ${panY}px)`,
+              filter: getEnhanceFilter(),
+            }}
+            autoPlay
+            playsInline
+            muted={isMuted}
+          />
         )}
 
-        {/* Mode 2: HLS Video Player */}
-        <video
-          ref={videoRef}
-          className={`w-full h-full object-cover ${
-            streamMode === 'hls' ? 'block' : 'hidden'
-          }`}
-          muted={isMuted}
-          playsInline
-          autoPlay
-          style={{
-            transform: `scale(${digitalZoom}) translate(${panX}px, ${panY}px)`,
-            filter: getEnhanceFilter(),
-          }}
-        />
+        {/* Mode 2: Live RTSP Snapshot Mode (Periodic refresh without browser socket exhaustion) */}
+        {streamMode === 'live' && (
+          <img
+            src={liveSnapshotUrl}
+            alt={camera.name}
+            className={`w-full h-full object-cover transition-opacity duration-300 ${
+              isLiveLoaded ? 'opacity-100' : 'opacity-90'
+            }`}
+            style={{
+              transform: `scale(${digitalZoom}) translate(${panX}px, ${panY}px)`,
+              filter: getEnhanceFilter(),
+            }}
+            onLoad={() => {
+              setIsLiveLoaded(true);
+              setStreamError(null);
+            }}
+            onError={() => {
+              setStreamError('Connecting RTSP session...');
+            }}
+          />
+        )}
 
-        {/* AI Bounding Box Canvas Overlay */}
+        {/* Mode 3: AI Simulation Synthetic Canvas Overlay */}
         <canvas
           ref={canvasRef}
           width={640}
           height={360}
-          className={`absolute inset-0 w-full h-full object-cover pointer-events-none ${
-            streamMode === 'ai_canvas' || hasActiveAlert ? 'block' : 'hidden'
+          className={`absolute inset-0 w-full h-full pointer-events-none z-10 ${
+            streamMode === 'ai_canvas' ? 'block' : 'block'
           }`}
         />
-
-        {/* Active Enhancement Mode Badge */}
-        {enhanceMode !== 'off' && (
-          <div className="absolute top-2 left-2 z-10 flex items-center gap-1 font-mono text-[9px] bg-amber-950/80 border border-amber-500/50 text-amber-300 px-1.5 py-0.5 rounded shadow">
-            <Sparkles className="h-2.5 w-2.5 text-amber-400 animate-pulse" />
-            <span className="font-bold uppercase tracking-wider">
-              {enhanceMode === 'hdr' && 'AI HDR'}
-              {enhanceMode === 'night' && 'NIGHT VISION'}
-              {enhanceMode === 'sharpen' && 'PLATE SHARPEN'}
-              {enhanceMode === 'color' && 'COLOR BOOST'}
-            </span>
-          </div>
-        )}
-
-        {/* HLS Connection Info Overlay (Only if HLS selected and error occurs) */}
-        {streamMode === 'hls' && !isPlayingLive && (
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center gap-2 z-10 text-xs font-mono text-slate-300 p-4 text-center">
-            <Radio className="h-6 w-6 text-blue-400 animate-pulse" />
-            <span className="font-bold text-white">
-              Connecting to Cloud HLS: {camera.name}
-            </span>
-            {streamError && <span className="text-[10px] text-amber-300">{streamError}</span>}
-            <div className="flex items-center gap-2 mt-2">
-              <button
-                onClick={() => setStreamMode('live')}
-                className="px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold flex items-center gap-1"
-              >
-                <Zap className="h-3 w-3" /> Use Live RTSP
-              </button>
-              <a
-                href="https://cctv.corp8.cloud/"
-                target="_blank"
-                rel="noreferrer"
-                className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold flex items-center gap-1"
-              >
-                Open Cloud Portal <ExternalLink className="h-3 w-3" />
-              </a>
-            </div>
-          </div>
-        )}
 
         {/* PTZ Crosshair Grid */}
         {showPtzGrid && (

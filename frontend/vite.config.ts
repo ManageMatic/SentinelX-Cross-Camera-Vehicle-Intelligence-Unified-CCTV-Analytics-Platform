@@ -14,6 +14,11 @@ export default defineConfig({
     port: 5173,
     host: '0.0.0.0',
     proxy: {
+      '/cctv-hls': {
+        target: 'https://cctv.corp8.cloud',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/cctv-hls/, ''),
+      },
       '/api': {
         target: 'http://localhost:8000',
         changeOrigin: true,
