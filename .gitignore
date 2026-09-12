@@ -67,3 +67,10 @@ Thumbs.db
 # Logs
 *.log
 logs/
+
+# Local video recordings
+*.dav
+*.mp4
+*.avi
+*.mkv
+patch_stream.py

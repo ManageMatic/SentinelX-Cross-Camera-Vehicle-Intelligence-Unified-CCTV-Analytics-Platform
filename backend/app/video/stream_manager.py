@@ -211,13 +211,12 @@ class CameraStreamSession:
 
         video_frame = VideoFrame(
             camera_id=self.camera_id,
-            timestamp=now_utc,
-            sequence_number=sequence_number,
+            frame_index=sequence_number,
+            timestamp_utc=now_utc,
+            image=frame,
             width=self.width,
             height=self.height,
             fps=self.measured_fps,
-            latency_ms=self.latency_ms,
-            frame_data=frame,
         )
 
         with self._lock:
