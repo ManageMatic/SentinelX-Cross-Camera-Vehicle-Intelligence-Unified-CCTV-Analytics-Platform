@@ -22,38 +22,280 @@ from app.schemas.camera import CameraBase, CameraSyncResult, SentinelIngestCamer
 logger = get_logger(__name__)
 settings = get_settings()
 
-AHMEDABAD_JUNCTIONS = [
-    ("SG Highway - ISKCON Cross Road", 23.0298, 72.5067),
-    ("SG Highway - Pakwan Junction", 23.0372, 72.5121),
-    ("SG Highway - Vaishnodevi Circle", 23.1189, 72.5401),
-    ("SG Highway - Thaltej Cross Road", 23.0504, 72.5165),
-    ("SG Highway - YMCA Club Crossing", 23.0076, 72.4962),
-    ("Ashram Road - Income Tax Circle", 23.0425, 72.5714),
-    ("Ashram Road - Paldi Cross Road", 23.0135, 72.5649),
-    ("Ashram Road - Vadaj Circle", 23.0612, 72.5728),
-    ("Ring Road - Bopal Junction", 23.0345, 72.4632),
-    ("Ring Road - Science City Cross Road", 23.0784, 72.5028),
-    ("Airport Road - Indira Bridge", 23.0831, 72.6174),
-    ("Airport Road - Hansol Circle", 23.0754, 72.6321),
-    ("Kalupur - Railway Station Exit Gate", 23.0289, 72.5998),
-    ("Geeta Mandir - Central Bus Port", 23.0124, 72.5891),
-    ("C.G. Road - Panchvati Circle", 23.0241, 72.5562),
-    ("C.G. Road - Swastik Cross Road", 23.0335, 72.5587),
-    ("Nehrunagar - Manekbaug Junction", 23.0195, 72.5384),
-    ("Shivranjani - Satellite Cross Road", 23.0251, 72.5284),
-    ("Drive-In Road - Helmet Circle", 23.0458, 72.5342),
-    ("Drive-In Road - Himalaya Mall Cross", 23.0512, 72.5276),
-    ("Naranpura - AEC Cross Road", 23.0631, 72.5441),
-    ("Memnagar - Subhash Chowk", 23.0567, 72.5378),
-    ("Vastrapur - Lake Perimeter North", 23.0389, 72.5298),
-    ("Bodakdev - Judges Bungalow Road", 23.0412, 72.5189),
-    ("Sola - High Court Flyover Entry", 23.0745, 72.5178),
-    ("Gota - Chandlodia Junction", 23.0945, 72.5312),
-    ("Sabarmati Riverfront - West Walkway", 23.0381, 72.5789),
-    ("Sabarmati Riverfront - East Gateway", 23.0392, 72.5834),
-    ("Naroda - GIDC Industrial Gate 1", 23.0712, 72.6645),
-    ("Odhav - Ring Road Entry Toll", 23.0189, 72.6712),
+OFFICIAL_SENTINEL_CAMERAS: List[Dict[str, Any]] = [
+    {
+        "id": "cam01",
+        "external_camera_id": "cam01",
+        "name": "CAM01 - Chiman bhai Bridge",
+        "location_name": "Chimanbhai Bridge, Sabarmati, Ahmedabad",
+        "district": "Ahmedabad",
+        "latitude": 23.0588,
+        "longitude": 72.5794
+    },
+    {
+        "id": "cam02",
+        "external_camera_id": "cam02",
+        "name": "CAM02 - Janpath",
+        "location_name": "Janpath Road, Ashram Road, Ahmedabad",
+        "district": "Ahmedabad",
+        "latitude": 23.0331,
+        "longitude": 72.5612
+    },
+    {
+        "id": "cam03",
+        "external_camera_id": "cam03",
+        "name": "CAM03 - O.N.G.C. Office",
+        "location_name": "ONGC Office Circle, Chandkheda, Ahmedabad",
+        "district": "Ahmedabad",
+        "latitude": 23.0945,
+        "longitude": 72.5841
+    },
+    {
+        "id": "cam04",
+        "external_camera_id": "cam04",
+        "name": "CAM04 - Paldi Circle",
+        "location_name": "Paldi Circle Junction, Ahmedabad",
+        "district": "Ahmedabad",
+        "latitude": 23.0135,
+        "longitude": 72.5649
+    },
+    {
+        "id": "cam05",
+        "external_camera_id": "cam05",
+        "name": "CAM05 - Visat teen Rasta",
+        "location_name": "Visat Teen Rasta, Sabarmati, Ahmedabad",
+        "district": "Ahmedabad",
+        "latitude": 23.0912,
+        "longitude": 72.5821
+    },
+    {
+        "id": "cam06",
+        "external_camera_id": "cam06",
+        "name": "CAM06 - Timbavadi gate Junagadh",
+        "location_name": "Timbavadi Gate, Junagadh",
+        "district": "Junagadh",
+        "latitude": 21.5222,
+        "longitude": 70.4579
+    },
+    {
+        "id": "cam07",
+        "external_camera_id": "cam07",
+        "name": "CAM07 - hero showroom gir somnath",
+        "location_name": "Hero Showroom, Veraval Highway, Gir Somnath",
+        "district": "Gir Somnath",
+        "latitude": 20.9042,
+        "longitude": 70.3667
+    },
+    {
+        "id": "cam08",
+        "external_camera_id": "cam08",
+        "name": "CAM08 - majewadi gate junagadh",
+        "location_name": "Majewadi Gate, Junagadh",
+        "district": "Junagadh",
+        "latitude": 21.5204,
+        "longitude": 70.4601
+    },
+    {
+        "id": "cam09",
+        "external_camera_id": "cam09",
+        "name": "CAM09 - new bypass near by circle junagadh 2",
+        "location_name": "New Bypass Near Circle 2, Junagadh",
+        "district": "Junagadh",
+        "latitude": 21.5389,
+        "longitude": 70.4712
+    },
+    {
+        "id": "cam10",
+        "external_camera_id": "cam10",
+        "name": "CAM10 - char chowk road 2 junagadh",
+        "location_name": "Char Chowk Road 2, Junagadh",
+        "district": "Junagadh",
+        "latitude": 21.5167,
+        "longitude": 70.4533
+    },
+    {
+        "id": "cam11",
+        "external_camera_id": "cam11",
+        "name": "CAM11 - dolatpara-junagadh",
+        "location_name": "Dolatpara Junction, Junagadh",
+        "district": "Junagadh",
+        "latitude": 21.5456,
+        "longitude": 70.4689
+    },
+    {
+        "id": "cam12",
+        "external_camera_id": "cam12",
+        "name": "CAM12 - Tri Mandir Adalaj Tollnaka",
+        "location_name": "Tri Mandir, Adalaj Tollnaka, Gandhinagar",
+        "district": "Gandhinagar",
+        "latitude": 23.1678,
+        "longitude": 72.5823
+    },
+    {
+        "id": "cam13",
+        "external_camera_id": "cam13",
+        "name": "CAM13 - CN Vidhyalaya",
+        "location_name": "CN Vidhyalaya, Ambawadi, Ahmedabad",
+        "district": "Ahmedabad",
+        "latitude": 23.0234,
+        "longitude": 72.5456
+    },
+    {
+        "id": "cam14",
+        "external_camera_id": "cam14",
+        "name": "CAM14 - Delight RLVD",
+        "location_name": "Delight RLVD Junction, Ahmedabad",
+        "district": "Ahmedabad",
+        "latitude": 23.0412,
+        "longitude": 72.5312
+    },
+    {
+        "id": "cam15",
+        "external_camera_id": "cam15",
+        "name": "CAM15 - Suvidha park",
+        "location_name": "Suvidha Park, Paldi, Ahmedabad",
+        "district": "Ahmedabad",
+        "latitude": 23.0189,
+        "longitude": 72.5298
+    },
+    {
+        "id": "cam16",
+        "external_camera_id": "cam16",
+        "name": "CAM16 - Visat P2",
+        "location_name": "Visat Phase 2, Sabarmati, Ahmedabad",
+        "district": "Ahmedabad",
+        "latitude": 23.0934,
+        "longitude": 72.5856
+    },
+    {
+        "id": "cam17",
+        "external_camera_id": "cam17",
+        "name": "CAM17 - Rajkot Bus Port CCTV",
+        "location_name": "Central Bus Port, Rajkot",
+        "district": "Rajkot",
+        "latitude": 22.3039,
+        "longitude": 70.8022
+    },
+    {
+        "id": "cam18",
+        "external_camera_id": "cam18",
+        "name": "CAM18 - Rajkot CCTV",
+        "location_name": "Trikon Baug Junction, Rajkot",
+        "district": "Rajkot",
+        "latitude": 22.2986,
+        "longitude": 70.7981
+    },
+    {
+        "id": "cam19",
+        "external_camera_id": "cam19",
+        "name": "CAM19 - KHAPARIA GRAM PANCHAYAT , TALUKA GANDEVI , DISTRICT NAVSARI",
+        "location_name": "Khaparia Gram Panchayat, Taluka Gandevi, Navsari",
+        "district": "Navsari",
+        "latitude": 20.8142,
+        "longitude": 72.9984
+    },
+    {
+        "id": "cam20",
+        "external_camera_id": "cam20",
+        "name": "CAM20 - Mohanpura",
+        "location_name": "Mohanpura, Asarwa, Ahmedabad",
+        "district": "Ahmedabad",
+        "latitude": 23.0289,
+        "longitude": 72.5912
+    },
+    {
+        "id": "cam21",
+        "external_camera_id": "cam21",
+        "name": "CAM21 - Patan Dethali Char Rasta",
+        "location_name": "Dethali Char Rasta, Patan",
+        "district": "Patan",
+        "latitude": 23.8493,
+        "longitude": 72.1266
+    },
+    {
+        "id": "cam22",
+        "external_camera_id": "cam22",
+        "name": "CAM22 - BK Mervada tran Rasta",
+        "location_name": "Mervada Tran Rasta, Banaskantha",
+        "district": "Banaskantha",
+        "latitude": 24.1722,
+        "longitude": 72.4344
+    },
+    {
+        "id": "cam23",
+        "external_camera_id": "cam23",
+        "name": "CAM23 - kheram",
+        "location_name": "Kheram Junction, Gandhinagar",
+        "district": "Gandhinagar",
+        "latitude": 23.2156,
+        "longitude": 72.6367
+    },
+    {
+        "id": "cam24",
+        "external_camera_id": "cam24",
+        "name": "CAM24 - dehgam",
+        "location_name": "Dehgam Cross Road, Gandhinagar",
+        "district": "Gandhinagar",
+        "latitude": 23.1692,
+        "longitude": 72.8122
+    },
+    {
+        "id": "cam25",
+        "external_camera_id": "cam25",
+        "name": "CAM25 - dhanori",
+        "location_name": "Dhanori, Navsari",
+        "district": "Navsari",
+        "latitude": 20.8567,
+        "longitude": 72.9456
+    },
+    {
+        "id": "cam26",
+        "external_camera_id": "cam26",
+        "name": "CAM26 - TANKAL",
+        "location_name": "Tankal, Chikhli, Navsari",
+        "district": "Navsari",
+        "latitude": 20.7645,
+        "longitude": 73.0412
+    },
+    {
+        "id": "cam27",
+        "external_camera_id": "cam27",
+        "name": "CAM27 - bilimora",
+        "location_name": "Bilimora Station Road, Navsari",
+        "district": "Navsari",
+        "latitude": 20.7625,
+        "longitude": 72.9525
+    },
+    {
+        "id": "cam28",
+        "external_camera_id": "cam28",
+        "name": "CAM28 - bilimora",
+        "location_name": "Bilimora Market Circle, Navsari",
+        "district": "Navsari",
+        "latitude": 20.7656,
+        "longitude": 72.9554
+    },
+    {
+        "id": "cam29",
+        "external_camera_id": "cam29",
+        "name": "CAM29 - bilimora",
+        "location_name": "Bilimora Bypass, Navsari",
+        "district": "Navsari",
+        "latitude": 20.7712,
+        "longitude": 72.9612
+    },
+    {
+        "id": "cam30",
+        "external_camera_id": "cam30",
+        "name": "CAM30 - Gandhidham Rambaugh p2",
+        "location_name": "Rambaugh Phase 2, Gandhidham, Kutch",
+        "district": "Kutch",
+        "latitude": 23.0753,
+        "longitude": 70.1337
+    }
 ]
+
+OFFICIAL_MAP_BY_ID = {c["external_camera_id"].lower(): c for c in OFFICIAL_SENTINEL_CAMERAS}
 
 
 class CameraCatalogService:
@@ -63,24 +305,18 @@ class CameraCatalogService:
         self.catalog_url = catalog_url or str(settings.SENTINEL_CATALOG_URL)
 
     def generate_fallback_cameras(self) -> List[Dict[str, Any]]:
-        """Generate fallback cameras (e.g. cam01..cam30) when remote catalog is unreachable."""
-        prefix = settings.SENTINEL_CAMERA_PREFIX or "cam"
-        start = settings.SENTINEL_CAMERA_START or 1
-        end = settings.SENTINEL_CAMERA_END or 30
-
+        """Generate full official 30-camera catalog when remote catalog is unreachable."""
         cameras = []
-        for i in range(start, end + 1):
-            cam_id = f"{prefix}{i:02d}"
-            loc_idx = (i - 1) % len(AHMEDABAD_JUNCTIONS)
-            loc_name, lat, lon = AHMEDABAD_JUNCTIONS[loc_idx]
-
+        for item in OFFICIAL_SENTINEL_CAMERAS:
+            cam_id = item["external_camera_id"]
             cameras.append({
                 "camera_id": cam_id,
-                "name": f"Traffic Cam {cam_id.upper()} - {loc_name}",
-                "location_name": loc_name,
-                "department": "Gujarat Traffic Police",
-                "latitude": lat,
-                "longitude": lon,
+                "external_camera_id": cam_id,
+                "name": item["name"],
+                "location_name": item["location_name"],
+                "department": f"Gujarat Police ({item['district']})",
+                "latitude": item["latitude"],
+                "longitude": item["longitude"],
                 "vendor": "Gujarat Police CCTV",
                 "vms": "Sentinel VMS",
                 "protocol": "RTSP/TCP",
@@ -93,32 +329,27 @@ class CameraCatalogService:
             })
         return cameras
 
-    async def fetch_catalog(self, url: Optional[str] = None) -> List[Dict[str, Any]]:
-        """Fetch raw camera catalog from remote endpoint using HTTPX."""
-        target_url = url or self.catalog_url
-        logger.info(f"Fetching camera catalog from: {target_url}")
+    async def fetch_catalog(self, catalog_url: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Fetch remote camera catalog with timeout and fallback support."""
+        target_url = catalog_url or self.catalog_url
+        timeout = httpx.Timeout(3.0, connect=1.5)
 
-        timeout = httpx.Timeout(4.0, connect=2.0)
         async with httpx.AsyncClient(timeout=timeout) as client:
             try:
-                response = await client.get(target_url)
-                response.raise_for_status()
-                data = response.json()
-
-                if isinstance(data, list):
-                    return data
-                elif isinstance(data, dict):
-                    if "cameras" in data and isinstance(data["cameras"], list):
+                resp = await client.get(target_url)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    if isinstance(data, list):
+                        return data
+                    elif isinstance(data, dict) and "cameras" in data:
                         return data["cameras"]
-                    elif "data" in data and isinstance(data["data"], list):
+                    elif isinstance(data, dict) and "data" in data:
                         return data["data"]
-                    elif "items" in data and isinstance(data["items"], list):
-                        return data["items"]
                     else:
                         return [data]
                 return []
             except Exception as e:
-                logger.warning(f"Remote catalog at {target_url} unavailable ({e}). Using configured fallback camera range.")
+                logger.warning(f"Remote catalog at {target_url} unavailable ({e}). Using official fallback camera catalog.")
                 return self.generate_fallback_cameras()
 
     def normalize_camera_item(self, raw: Dict[str, Any], index: int = 0) -> CameraBase:
@@ -132,22 +363,41 @@ class CameraCatalogService:
             else item.camera_id or item.id or f"cam{index + 1:02d}"
         )
         ext_id = str(ext_id).strip()
+        clean_id = ext_id.lower().replace("-", "").replace("_", "")
+
+        matched_official = OFFICIAL_MAP_BY_ID.get(clean_id)
+        if not matched_official and 0 <= index < len(OFFICIAL_SENTINEL_CAMERAS):
+            matched_official = OFFICIAL_SENTINEL_CAMERAS[index]
 
         # 2. Determine Name
-        name = item.name or f"Camera {ext_id}"
+        if item.name:
+            name = item.name
+        elif matched_official:
+            name = matched_official["name"]
+        else:
+            name = f"Camera {ext_id}"
 
         # 3. Location & Department
-        loc_idx = index % len(AHMEDABAD_JUNCTIONS)
-        default_loc, default_lat, default_lon = AHMEDABAD_JUNCTIONS[loc_idx]
-        location = item.location_name or item.location or default_loc
-        department = item.department or "Gujarat Traffic Police"
+        if item.location_name:
+            location = item.location_name
+        elif item.location:
+            location = item.location
+        elif matched_official:
+            location = matched_official["location_name"]
+        else:
+            location = f"Gujarat CCTV Location {ext_id}"
+
+        district = matched_official["district"] if matched_official else "Gujarat"
+        department = item.department or f"Gujarat Police ({district})"
 
         # 4. Latitude & Longitude
+        default_lat = matched_official["latitude"] if matched_official else 23.0225
+        default_lon = matched_official["longitude"] if matched_official else 72.5714
+
         lat = item.latitude if item.latitude is not None else (item.lat if item.lat is not None else default_lat)
         lon = item.longitude if item.longitude is not None else (item.lon if item.lon is not None else (item.lng if item.lng is not None else default_lon))
 
-        # 5. Sanitized RTSP Path & Streaming Endpoints (Never storing raw secrets in DB)
-        clean_id = ext_id.lower().replace("-", "").replace("_", "")
+        # 5. Sanitized RTSP Path & Streaming Endpoints
         rtsp = item.rtsp_url or item.stream_url or item.url or build_public_rtsp_path(clean_id)
         whep_endpoint = item.whep_url or f"/api/cameras/{clean_id}/whep"
         hls_endpoint = item.hls_url or f"/api/cameras/{clean_id}/hls/index.m3u8"
@@ -199,7 +449,6 @@ class CameraCatalogService:
             try:
                 norm = self.normalize_camera_item(raw_camera, index=idx)
 
-                # Check if camera already exists
                 stmt = select(Camera).where(Camera.external_camera_id == norm.external_camera_id)
                 result = await db.execute(stmt)
                 existing_cam = result.scalar_one_or_none()
@@ -258,6 +507,9 @@ class CameraCatalogService:
                         modified = True
                     if existing_cam.location_name != norm.location_name:
                         existing_cam.location_name = norm.location_name
+                        modified = True
+                    if existing_cam.department != norm.department:
+                        existing_cam.department = norm.department
                         modified = True
                     if existing_cam.latitude != norm.latitude or existing_cam.longitude != norm.longitude:
                         existing_cam.latitude = norm.latitude

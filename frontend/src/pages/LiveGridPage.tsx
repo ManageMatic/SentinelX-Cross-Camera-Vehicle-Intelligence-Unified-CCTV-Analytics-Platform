@@ -197,7 +197,7 @@ export const LiveGridPage: React.FC<LiveGridPageProps> = ({ cameras }) => {
       {showFilterDrawer && (
         <div className="bg-[#090f1d] p-3 rounded-xl border border-slate-800 flex flex-wrap items-center gap-2 text-xs font-mono animate-in slide-in-from-top duration-200">
           <span className="text-slate-400 font-bold mr-2">STATE DISTRICT:</span>
-          {['ALL', 'Ahmedabad', 'Gandhinagar', 'Junagadh', 'Surat', 'Vadodara', 'Rajkot', 'Somnath', 'Dwarka'].map((district) => (
+          {['ALL', 'Ahmedabad', 'Gandhinagar', 'Junagadh', 'Navsari', 'Rajkot', 'Gir Somnath', 'Patan', 'Banaskantha', 'Kutch', 'Surat', 'Vadodara', 'Dwarka'].map((district) => (
             <button
               key={district}
               onClick={() => setSelectedDistrict(district)}

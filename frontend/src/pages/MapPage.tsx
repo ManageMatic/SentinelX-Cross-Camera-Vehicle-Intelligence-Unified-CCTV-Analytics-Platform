@@ -25,6 +25,7 @@ import { Camera, VehicleJourney, JourneyWaypoint } from '../types';
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
 import { TacticalLeafletMap } from '../components/gis/TacticalLeafletMap';
+import { DEMO_CAMERAS } from '../services/api';
 
 interface MapPageProps {
   cameras: Camera[];
@@ -32,128 +33,7 @@ interface MapPageProps {
 }
 
 // Default Fallback Gujarat Cameras
-const defaultGujaratCameras: Camera[] = [
-  {
-    id: 'cam-ahm-01',
-    external_camera_id: 'CAM_AHM_001',
-    name: 'Ahmedabad Junction Entry Gate',
-    location_name: 'Ahmedabad Junction, Ahmedabad',
-    latitude: 23.0225,
-    longitude: 72.5714,
-    live_status: 'ONLINE',
-    fps: 25.0,
-    resolution: '1080p',
-    codec: 'H264',
-  },
-  {
-    id: 'cam-ahm-02',
-    external_camera_id: 'CAM_AHM_002',
-    name: 'SG Highway — Iscon Cross Road',
-    location_name: 'SG Highway, Ahmedabad',
-    latitude: 23.0298,
-    longitude: 72.5074,
-    live_status: 'ONLINE',
-    fps: 30.0,
-    resolution: '1080p',
-    codec: 'H264',
-  },
-  {
-    id: 'cam-ahm-03',
-    external_camera_id: 'CAM_AHM_003',
-    name: 'Ring Road — Vaishnodevi Circle',
-    location_name: 'Vaishnodevi Circle, Ahmedabad',
-    latitude: 23.1362,
-    longitude: 72.5448,
-    live_status: 'ONLINE',
-    fps: 25.0,
-    resolution: '1080p',
-    codec: 'H264',
-  },
-  {
-    id: 'cam-gan-01',
-    external_camera_id: 'CAM_GAN_001',
-    name: 'Gandhinagar Secretariat Gate 1',
-    location_name: 'Sector 10, Gandhinagar',
-    latitude: 23.2156,
-    longitude: 72.6369,
-    live_status: 'ONLINE',
-    fps: 30.0,
-    resolution: '1080p',
-    codec: 'H264',
-  },
-  {
-    id: 'cam-gan-02',
-    external_camera_id: 'CAM_GAN_002',
-    name: 'Infocity IT Park Junction',
-    location_name: 'Infocity, Gandhinagar',
-    latitude: 23.1894,
-    longitude: 72.6276,
-    live_status: 'ONLINE',
-    fps: 25.0,
-    resolution: '1080p',
-    codec: 'H264',
-  },
-  {
-    id: 'cam-vad-01',
-    external_camera_id: 'CAM_VAD_001',
-    name: 'Vadodara Alkapuri Main Underpass',
-    location_name: 'Alkapuri, Vadodara',
-    latitude: 22.3107,
-    longitude: 73.1812,
-    live_status: 'ONLINE',
-    fps: 25.0,
-    resolution: '1080p',
-    codec: 'H264',
-  },
-  {
-    id: 'cam-vad-02',
-    external_camera_id: 'CAM_VAD_002',
-    name: 'NH48 Golden Bridge Toll Gate',
-    location_name: 'National Highway 48, Vadodara',
-    latitude: 22.3551,
-    longitude: 73.2324,
-    live_status: 'ONLINE',
-    fps: 30.0,
-    resolution: '1080p',
-    codec: 'H264',
-  },
-  {
-    id: 'cam-sur-01',
-    external_camera_id: 'CAM_SUR_001',
-    name: 'Surat Ring Road Entry Flyover',
-    location_name: 'Ring Road, Surat',
-    latitude: 21.1959,
-    longitude: 72.8302,
-    live_status: 'ONLINE',
-    fps: 30.0,
-    resolution: '1080p',
-    codec: 'H264',
-  },
-  {
-    id: 'cam-sur-02',
-    external_camera_id: 'CAM_SUR_002',
-    name: 'Dumas Road — Airport Circle',
-    location_name: 'Dumas Road, Surat',
-    latitude: 21.1274,
-    longitude: 72.7487,
-    live_status: 'ONLINE',
-    fps: 25.0,
-    resolution: '1080p',
-    codec: 'H264',
-  },
-  {
-    id: 'cam-raj-01',
-    external_camera_id: 'CAM_RAJ_001',
-    name: 'Rajkot Kalawad Road Junction',
-    location_name: 'Kalawad Road, Rajkot',
-    latitude: 22.3039,
-    longitude: 70.8022,
-    live_status: 'ONLINE',
-    fps: 25.0,
-    resolution: '1080p',
-    codec: 'H264',
-  },
-];
+const defaultGujaratCameras: Camera[] = DEMO_CAMERAS;
 
 // Sample Preset Vehicle Trajectories
 const sampleJourneys: Record<string, VehicleJourney> = {
